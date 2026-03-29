@@ -65,7 +65,7 @@ public class GamePanel extends JPanel {
                 {1, 0, 0, 0, 1, 2, 1, 0, 0, 0, 0, 0, 0, 0, 1},
                 {1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}
         };
-        currentRoom = new Room("Fase 1", layout);
+        currentRoom = new Room(layout);
         player = new Player(1, 1);
         enemies.clear();
         projectiles.clear();
@@ -91,7 +91,7 @@ public class GamePanel extends JPanel {
                 {1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1},
                 {1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}
         };
-        currentRoom = new Room("Fase 2", layout);
+        currentRoom = new Room(layout);
 
         enemies.clear();
         projectiles.clear();

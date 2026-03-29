@@ -4,7 +4,6 @@ package st.project;
  * Representa um local em 2D. Agora guarda a grade (mapa) visual da sala.
  */
 public class Room {
-    private String description;
 
     // Matriz que representa a sala (0=chão, 1=parede, 2=chave, 3=saída trancada, 4=saída aberta)
     private int[][] mapLayout;
@@ -15,13 +14,38 @@ public class Room {
     public static final int TILE_EXIT_LOCKED = 3;
     public static final int TILE_EXIT_OPEN = 4;
 
-    public Room(String description, int[][] layout) {
-        this.description = description;
-        this.mapLayout = layout;
-    }
+    public Room(int[][] layout) {
+        if (layout.length == 0) {
+            throw new IllegalArgumentException("A room nao pode ter 0 blocos.");
+        }
 
-    public String getShortDescription() {
-        return description;
+        int totalBlocks = layout.length * layout[0].length;
+        if (totalBlocks < 5) {
+            throw new IllegalArgumentException("A room precisa ter ao menos 5 blocos disponíveis");
+        }
+
+        int keyCount = 0;
+        int lockedExitCount = 0;
+        for (int[] row : layout) {
+            for (int tile : row) {
+                if (tile == TILE_KEY) {
+                    keyCount++;
+                }
+                if (tile == TILE_EXIT_LOCKED) {
+                    lockedExitCount++;
+                }
+            }
+        }
+
+        if (keyCount < 3) {
+            throw new IllegalArgumentException("A room precisa ter ao menos 3 chaves.");
+        }
+
+        if (lockedExitCount != 1) {
+            throw new IllegalArgumentException("A room precisa ter exatamente 1 porta de saida trancada.");
+        }
+
+        this.mapLayout = layout;
     }
 
     // Retorna a grade da sala
