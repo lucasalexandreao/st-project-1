@@ -12,8 +12,6 @@ import static org.mockito.Mockito.*;
 class ProjectileTest {
 
 
-
-
     @Test
     void shouldIdentifyPlayerProjectile() {
         Projectile playerProjectile = new Projectile(0, 0, 0, 0, true);

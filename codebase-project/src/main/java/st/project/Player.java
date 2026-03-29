@@ -13,10 +13,30 @@ public class Player {
     private int ammo;
 
     public Player(int startX, int startY) {
+        this(startX, startY, null);
+    }
+
+    public Player(int startX, int startY, Room room) {
+        if (room != null) {
+            validateSpawnPosition(startX, startY, room);
+        }
+
         this.gridX = startX;
         this.gridY = startY;
         this.keyFragments = 0;
         this.ammo = 0; // Começa sem munição
+    }
+
+    private void validateSpawnPosition(int x, int y, Room room) {
+
+        if (x < 0 || y < 0 || x >= room.getWidth() || y >= room.getHeight()) {
+            throw new IllegalArgumentException("Player spawn precisa estar dentro da tela: x >= 0, y >= 0, x < largura, y < altura.");
+        }
+
+        if (room.getMapLayout()[y][x] != Room.TILE_FLOOR) {
+            throw new IllegalArgumentException("Player spawn precisa ser em TILE_FLOOR.");
+        }
+
     }
 
     public void moveUp()    { gridY--; setLastDir(0, -1); }
@@ -32,6 +52,10 @@ public class Player {
     public int getGridX() { return gridX; }
     public int getGridY() { return gridY; }
     public void setPosition(int x, int y) { this.gridX = x; this.gridY = y; }
+    public void setPosition(int x, int y, Room room) {
+        validateSpawnPosition(x, y, room);
+        setPosition(x, y);
+    }
 
     public int getKeyCount() { return keyFragments; }
     public void collectKey() { keyFragments++; }

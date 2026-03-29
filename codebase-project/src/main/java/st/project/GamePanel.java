@@ -66,7 +66,7 @@ public class GamePanel extends JPanel {
                 {1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}
         };
         currentRoom = new Room(layout);
-        player = new Player(1, 1);
+        player = new Player(1, 1, currentRoom);
         enemies.clear();
         projectiles.clear();
     }
@@ -76,7 +76,6 @@ public class GamePanel extends JPanel {
         framesLeft = 30 * 30; // Reseta os 30 Segundos
         player.unlockShooting(); // DESBLOQUEIA O TIRO!
         player.resetKeys();
-        player.setPosition(1, 1);
 
         int[][] layout = {
                 {1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1},
@@ -92,6 +91,7 @@ public class GamePanel extends JPanel {
                 {1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}
         };
         currentRoom = new Room(layout);
+        player.setPosition(1, 1, currentRoom);
 
         enemies.clear();
         projectiles.clear();
