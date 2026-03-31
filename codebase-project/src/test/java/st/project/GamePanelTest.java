@@ -105,6 +105,7 @@ class GamePanelTest {
         return (List<Enemy>) getField(panel, "enemies");
     }
 
+    // DOMÍNIO E ESTRUTURAL
     @Test
     void shouldInitializeDefaultStateInConstructor() {
         GamePanel panel = createPanelWithStoppedTimer();
@@ -120,6 +121,7 @@ class GamePanelTest {
         assertTrue(projectiles(panel).isEmpty());
     }
 
+    // DOMÍNIO E ESTRUTURAL
     @Test
     void shouldLoadLevel2WhenCalledReflectively() {
         GamePanel panel = createPanelWithStoppedTimer();
@@ -137,6 +139,7 @@ class GamePanelTest {
         assertTrue(projectiles(panel).isEmpty());
     }
 
+    // ESTRUTURAL
     @Test
     void shouldReturnImmediatelyFromUpdateWhenGameAlreadyEnded() {
         GamePanel panel = createPanelWithStoppedTimer();
@@ -156,6 +159,7 @@ class GamePanelTest {
         assertEquals(11, (int) getField(panel, "framesLeft"));
     }
 
+    // FRONTEIRA E ESTRUTURAL
     @Test
     void shouldSetGameOverWhenTimeRunsOut() {
         GamePanel panel = createPanelWithStoppedTimer();
@@ -167,6 +171,7 @@ class GamePanelTest {
         assertEquals(0, (int) getField(panel, "framesLeft"));
     }
 
+    // DOMÍNIO E ESTRUTURAL
     @Test
     void shouldSetGameOverWhenEnemyTouchesPlayer() {
         GamePanel panel = createPanelWithStoppedTimer();
@@ -185,6 +190,7 @@ class GamePanelTest {
         assertTrue((boolean) getField(panel, "gameOver"));
     }
 
+    // FRONTEIRA E DOMÍNIO
     @Test
     void shouldCreateEnemyProjectileWhenCooldownAllowsShot() {
         GamePanel panel = createPanelWithStoppedTimer();
@@ -206,6 +212,7 @@ class GamePanelTest {
         assertFalse(projectiles(panel).get(0).isPlayerOwned());
     }
 
+    // FRONTEIRA E ESTRUTURAL
     @Test
     void shouldRemoveProjectileWhenHitsWallOrLeavesMap() {
         GamePanel panel = createPanelWithStoppedTimer();
@@ -225,6 +232,7 @@ class GamePanelTest {
         assertTrue(projectiles(panel).isEmpty());
     }
 
+    // DOMÍNIO E ESTRUTURAL
     @Test
     void shouldHandleProjectileCollisionsForPlayerAndEnemyOwnedShots() {
         GamePanel panel = createPanelWithStoppedTimer();
@@ -249,6 +257,7 @@ class GamePanelTest {
         assertTrue((boolean) getField(panel, "gameOver"));
     }
 
+    // DOMÍNIO E FRONTEIRA
     @Test
     void shouldMovePlayerAndHandleWallLockedExitAndShootOnKeyPress() {
         GamePanel panel = createPanelWithStoppedTimer();
@@ -288,6 +297,7 @@ class GamePanelTest {
         assertEquals(1, player.getGridX());
     }
 
+    // DOMÍNIO
     @Test
     void shouldCollectKeysOpenExitAndAdvanceOrWin() {
         GamePanel panel = createPanelWithStoppedTimer();
@@ -327,6 +337,7 @@ class GamePanelTest {
         assertTrue((boolean) getField(panel, "gameWon"));
     }
 
+    // ESTRUTURAL
     @Test
     void shouldPaintAndRenderEndScreensAndAmmoInfo() {
         GamePanel panel = createPanelWithStoppedTimer();
@@ -351,6 +362,7 @@ class GamePanelTest {
         assertDoesNotThrow(() -> panel.paintComponent(graphics));
     }
 
+    // ESTRUTURAL E FRONTEIRA
     @Test
     void shouldDrawAllTileTypesAndIgnoreUnknownType() {
         GamePanel panel = createPanelWithStoppedTimer();
@@ -368,6 +380,7 @@ class GamePanelTest {
         verify(graphics).setColor(Color.CYAN);
     }
 
+    // ESTRUTURAL
     @Test
     void shouldAllowTimerActionToExecuteWithoutExceptions() {
         GamePanel panel = createPanelWithStoppedTimer();
@@ -376,6 +389,7 @@ class GamePanelTest {
         assertDoesNotThrow(() -> panel.paint(image.getGraphics()));
     }
 
+    // ESTRUTURAL
     @Test
     void shouldExecuteTimerAction() {
         GamePanel panel = createPanelWithStoppedTimer();
@@ -384,6 +398,7 @@ class GamePanelTest {
         assertDoesNotThrow(() -> timer.getActionListeners()[0].actionPerformed(null));
     }
 
+    // FRONTEIRA E ESTRUTURAL
     @Test
     void shouldRemoveProjectileWhenOutOfBounds() {
         GamePanel panel = createPanelWithStoppedTimer();
@@ -403,6 +418,8 @@ class GamePanelTest {
         assertTrue(projectiles(panel).isEmpty());
     }
 
+    // GERADO POR IA (PARA ATINGIR 100% DE COBERTURA)
+    // ESTRUTURAL
     @Test
     void shouldNotTriggerCollisionWhenEntitiesMiss() {
         GamePanel panel = createPanelWithStoppedTimer();
@@ -427,6 +444,8 @@ class GamePanelTest {
         assertEquals(2, projectiles(panel).size());
     }
 
+    // GERADO POR IA (PARA ATINGIR 100% DE COBERTURA)
+    // ESTRUTURAL
     @Test
     void shouldPaintWithoutShootingUnlocked() {
         GamePanel panel = createPanelWithStoppedTimer();
@@ -441,6 +460,7 @@ class GamePanelTest {
         assertDoesNotThrow(() -> panel.paintComponent(image.getGraphics()));
     }
 
+    // ESTRUTURAL E FRONTEIRA
     @Test
     void shouldHandleKeyAdapterEdgeCases() {
         GamePanel panel = createPanelWithStoppedTimer();
@@ -474,6 +494,9 @@ class GamePanelTest {
         assertEquals(13, player.getGridX());
     }
 
+
+    // GERADO POR IA (PARA ATINGIR 100% DE COBERTURA)
+    // ESTRUTURAL
     @Test
     void shouldNotTriggerCollisionWhenPartiallyMatchingCoordinates() {
         GamePanel panel = createPanelWithStoppedTimer();
@@ -501,6 +524,8 @@ class GamePanelTest {
         assertEquals(2, projectiles(panel).size());
     }
 
+    // GERADO POR IA (PARA ATINGIR 100% DE COBERTURA)
+    // DOMÍNIO
     @Test
     void shouldSuccessfullyMoveUpAndDownWithoutHittingWalls() {
         GamePanel panel = createPanelWithStoppedTimer();
@@ -523,6 +548,7 @@ class GamePanelTest {
         assertEquals(2, player.getGridY());
     }
 
+    // ESTRUTURAL
     @Test
     void shouldNotGameOverWhenPlayerAndEnemyShareOnlyXCoordinate() {
         GamePanel panel = createPanelWithStoppedTimer();

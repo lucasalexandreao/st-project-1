@@ -9,6 +9,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 
 class RoomTest {
 
+    // FRONTEIRA
     @Test
     void roomEmpty() {
         int[][] layout = {};
@@ -18,7 +19,7 @@ class RoomTest {
         assertEquals("A room nao pode ter 0 blocos.", exception.getMessage());
     }
 
-    
+    // DOMÍNIO
     @Test
     void getTheRightWidthFromRoom(){
         int[][] layout = {
@@ -31,7 +32,8 @@ class RoomTest {
         assertEquals(room.getWidth(),3);
     }
 
-     @Test
+    // DOMÍNIO
+    @Test
     void getTheRightHeightFromRoom(){
         int[][] layout = {
             {Room.TILE_FLOOR, Room.TILE_EXIT_OPEN, Room.TILE_KEY},
@@ -43,6 +45,7 @@ class RoomTest {
         assertEquals(room.getHeight(),2);
     }
 
+    // DOMÍNIO E FRONTEIRA
     @Test
     void shouldThrowWhenRoomHasLessThanFiveBlocks() {
         int[][] layout = {
@@ -55,6 +58,7 @@ class RoomTest {
         assertEquals("A room precisa ter ao menos 5 blocos disponíveis", exception.getMessage());
     }
 
+    // DOMÍNIO E FRONTEIRA
     @Test
     void shouldAllowRoomWithExactlyFiveBlocks() {
         int[][] layout = {
@@ -64,6 +68,7 @@ class RoomTest {
         assertDoesNotThrow(() -> new Room(layout));
     }
 
+    // DOMÍNIO E FRONTEIRA
     @Test
     void shouldThrowWhenRoomHasLessThanThreeKeys() {
         int[][] layout = {
@@ -76,6 +81,7 @@ class RoomTest {
         assertEquals("A room precisa ter ao menos 3 chaves.", exception.getMessage());
     }
 
+    // DOMÍNIO E FRONTEIRA
     @Test
     void shouldThrowWhenRoomDoesNotHaveExactlyOneLockedExit() {
         int[][] layout = {
@@ -88,6 +94,7 @@ class RoomTest {
         assertEquals("A room precisa ter exatamente 1 porta de saida trancada.", exception.getMessage());
     }
 
+    // DOMÍNIO
     @Test
     void shouldTakeKeyAndReplaceTileWithFloor() {
         int[][] layout = {
@@ -103,6 +110,7 @@ class RoomTest {
         assertEquals(Room.TILE_FLOOR, room.getMapLayout()[0][1]);
     }
 
+    // DOMÍNIO
     @Test
     void shouldReturnNoItemAtPosition() {
         int[][] layout = {
@@ -118,6 +126,7 @@ class RoomTest {
         assertEquals(-1, item);
     }
 
+    // DOMÍNIO
     @Test
     void shouldOpenLockedExit() {
         int[][] layout = {
@@ -132,6 +141,8 @@ class RoomTest {
 
         assertEquals(Room.TILE_EXIT_OPEN, room.getMapLayout()[0][1]);
     }
+
+    // HÍBRIDO E ESTRUTURAL
     @Test
     void shouldNotChangeTileWhenExitIsNotLocked() {
         int[][] layout = {

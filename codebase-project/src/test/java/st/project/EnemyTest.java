@@ -11,6 +11,7 @@ import static org.mockito.Mockito.*;
 
 public class EnemyTest {
 
+    // DOMÍNIO
     @Test
     void shouldInitializeAtCorrectPosition() {
         Enemy enemy = new Enemy(5, 8);
@@ -19,6 +20,7 @@ public class EnemyTest {
         assertEquals(8, enemy.getGridY());
     }
 
+    // DOMÍNIO E FRONTEIRA
     @Test
     void shouldWaitCooldownToShoot() {
         Enemy enemy = new Enemy(1, 1);
@@ -33,6 +35,7 @@ public class EnemyTest {
         assertFalse(enemy.canShoot());
     }
 
+    // ESTRUTURAL
     @Test
     void shouldDrawOrangeTriangle() {
         // Ferramenta de desenho usando Mockito
@@ -47,6 +50,7 @@ public class EnemyTest {
         verify(mockGraphics).fillPolygon(any(int[].class), any(int[].class), eq(3));
     }
 
+    // FRONTEIRA E ESTRUTURAL
     @Test
     void shouldNotDecreaseCooldownBelowZero() {
         Enemy enemy = new Enemy(1, 1);

@@ -74,7 +74,7 @@ public class GamePanel extends JPanel {
     private void loadLevel2() {
         currentLevel = 2;
         framesLeft = 30 * 30; // Reseta os 30 Segundos
-        player.unlockShooting(); // DESBLOQUEIA O TIRO!
+        player.unlockShooting();
         player.resetKeys();
 
         int[][] layout = {
@@ -155,7 +155,6 @@ public class GamePanel extends JPanel {
                 Iterator<Enemy> eIt = enemies.iterator();
                 while (eIt.hasNext()) {
                     Enemy e = eIt.next();
-                    // Checagem simples de caixa (Bounding box)
                     if (Math.abs(p.getX() - (e.getGridX() * TILE_SIZE + 20)) < 20 &&
                             Math.abs(p.getY() - (e.getGridY() * TILE_SIZE + 20)) < 20) {
                         eIt.remove(); // Inimigo morre
