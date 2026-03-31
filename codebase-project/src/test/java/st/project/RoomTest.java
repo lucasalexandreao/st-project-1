@@ -142,7 +142,7 @@ class RoomTest {
         assertEquals(Room.TILE_EXIT_OPEN, room.getMapLayout()[0][1]);
     }
 
-    // HÍBRIDO E ESTRUTURAL
+    // DOMÍNIO E ESTRUTURAL
     @Test
     void shouldNotChangeTileWhenExitIsNotLocked() {
         int[][] layout = {
