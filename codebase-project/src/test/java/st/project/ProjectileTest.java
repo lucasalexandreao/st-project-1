@@ -12,6 +12,7 @@ import static org.mockito.Mockito.*;
 class ProjectileTest {
 
 
+    // DOMÍNIO
     @Test
     void shouldIdentifyPlayerProjectile() {
         Projectile playerProjectile = new Projectile(0, 0, 0, 0, true);
@@ -21,6 +22,7 @@ class ProjectileTest {
         assertFalse(enemyProjectile.isPlayerOwned());
     }
 
+    // DOMÍNIO
     @Test
     void shouldHandleNegativeVelocity() {
         Projectile projectile = new Projectile(50, 50, -5, -10, true);
@@ -31,6 +33,7 @@ class ProjectileTest {
         assertEquals(40, projectile.getY());
     }
 
+    // ESTRUTURAL
     @Test
     void shouldDrawPlayerProjectileWithCyanColor() {
         Graphics mockGraphics = mock(Graphics.class);
@@ -42,6 +45,7 @@ class ProjectileTest {
         verify(mockGraphics).fillOval(45, 70, 10, 10);
     }
 
+    // ESTRUTURAL
     @Test
     void shouldDrawEnemyProjectileWithMagentaColor() {
         Graphics mockGraphics = mock(Graphics.class);

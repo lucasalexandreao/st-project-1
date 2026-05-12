@@ -20,6 +20,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class MainTest {
 
+    // ESTRUTURAL
     @Test
     void shouldInstantiateMainClass() {
         Main main = new Main();
@@ -27,6 +28,7 @@ class MainTest {
         assertNotNull(main);
     }
 
+    // DOMÍNIO E ESTRUTURAL
     @Test
     void shouldCreateWindowWithExpectedConfiguration() {
         if (GraphicsEnvironment.isHeadless()) {
@@ -47,6 +49,7 @@ class MainTest {
         }
     }
 
+    // FRONTEIRA
     @Test
     void shouldThrowWhenCreatingWindowWithNullPanel() {
         IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () -> Main.createMainWindow(null));
@@ -54,6 +57,8 @@ class MainTest {
         assertEquals("contentPanel não pode ser nulo", exception.getMessage());
     }
 
+    // GERADO POR IA (PARA ATINGIR 100% DE COBERTURA)
+    // ESTRUTURAL
     @Test
     void shouldScheduleActionWhenNotInEventDispatchThread() throws InterruptedException {
         CountDownLatch latch = new CountDownLatch(1);
@@ -72,6 +77,8 @@ class MainTest {
         assertTrue(executedOnEdt.get());
     }
 
+    // GERADO POR IA (PARA ATINGIR 100% DE COBERTURA)
+    // ESTRUTURAL
     @Test
     void shouldExecuteImmediatelyWhenAlreadyInEventDispatchThread() throws Exception {
         CountDownLatch latch = new CountDownLatch(1);
@@ -102,6 +109,8 @@ class MainTest {
         assertTrue(actionExecuted.get());
     }
 
+    // GERADO POR IA (PARA ATINGIR 100% DE COBERTURA)
+    // ESTRUTURAL E FRONTEIRA
     @Test
     void shouldCallStartupActionWhenMainIsInvoked() {
         AtomicBoolean started = new AtomicBoolean(false);
@@ -128,6 +137,7 @@ class MainTest {
         }
     }
 
+    // ESTRUTURAL
     @Test
     void shouldRunStartGameWithInjectedDependencies() {
         class TestPanel extends JPanel {
@@ -166,6 +176,7 @@ class MainTest {
         }
     }
 
+    // DOMÍNIO E ESTRUTURAL
     @Test
     void shouldDisplayWindowUsingDefaultWindowDisplayer() {
         JPanel panel = new JPanel();

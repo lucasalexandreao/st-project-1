@@ -22,6 +22,7 @@ public class PlayerTest {
 		return new Room(layout);
 	}
 
+	// DOMÍNIO
 	@Test
 	void shouldCreatePlayerOnValidFloorInsideBounds() {
 		Room room = createValidRoom();
@@ -29,6 +30,7 @@ public class PlayerTest {
 		assertDoesNotThrow(() -> new Player(1, 1, room));
 	}
 
+	// FRONTEIRA
 	@Test
 	void shouldThrowWhenSpawnXIsNegative() {
 		Room room = createValidRoom();
@@ -38,6 +40,7 @@ public class PlayerTest {
 		assertEquals("Player spawn precisa estar dentro da tela: x >= 0, y >= 0, x < largura, y < altura.", exception.getMessage());
 	}
 
+	// FRONTEIRA
 	@Test
 	void shouldThrowWhenSpawnYIsNegative() {
 		Room room = createValidRoom();
@@ -47,6 +50,7 @@ public class PlayerTest {
 		assertEquals("Player spawn precisa estar dentro da tela: x >= 0, y >= 0, x < largura, y < altura.", exception.getMessage());
 	}
 
+	// FRONTEIRA
 	@Test
 	void shouldThrowWhenSpawnIsOutOfRoomLowerBounds() {
 		Room room = createValidRoom();
@@ -56,6 +60,7 @@ public class PlayerTest {
 		assertEquals("Player spawn precisa estar dentro da tela: x >= 0, y >= 0, x < largura, y < altura.", exception.getMessage());
 	}
 
+	// FRONTEIRA
     @Test
 	void shouldThrowWhenSpawnIsOutOfRoomRighterBounds() {
 		Room room = createValidRoom();
@@ -65,6 +70,7 @@ public class PlayerTest {
 		assertEquals("Player spawn precisa estar dentro da tela: x >= 0, y >= 0, x < largura, y < altura.", exception.getMessage());
 	}
 
+	// DOMÍNIO
 	@Test
 	void shouldThrowWhenSpawnTileIsNotFloor() {
 		Room room = createValidRoom();
@@ -74,6 +80,7 @@ public class PlayerTest {
 		assertEquals("Player spawn precisa ser em TILE_FLOOR.", exception.getMessage());
 	}
 
+	// DOMÍNIO
 	@Test
 	void shouldSetPositionWhenTileIsValid() {
 		Room room = createValidRoom();
@@ -84,6 +91,7 @@ public class PlayerTest {
 		assertEquals(2, player.getGridY());
 	}
 
+	// DOMÍNIO
 	@Test
 	void shouldThrowWhenSetPositionTileIsInvalid() {
 		Room room = createValidRoom();
@@ -94,6 +102,7 @@ public class PlayerTest {
 		assertEquals("Player spawn precisa ser em TILE_FLOOR.", exception.getMessage());
 	}
 
+	// DOMÍNIO E FRONTEIRA
 	@Test
 	void shouldRequireThreeKeysToHaveAllKeys() {
 		Player player = new Player(1, 1);
@@ -106,6 +115,7 @@ public class PlayerTest {
 		assertTrue(player.hasAllKeys());
 	}
 
+	// DOMÍNIO
 	@Test
 	void shouldMoveUpAndUpdateLastDirection() {
 		Player player = new Player(2, 2);
@@ -118,6 +128,7 @@ public class PlayerTest {
 		assertEquals(-1, player.getLastDirY());
 	}
 
+	// DOMÍNIO
 	@Test
 	void shouldMoveDownAndUpdateLastDirection() {
 		Player player = new Player(2, 2);
@@ -130,6 +141,7 @@ public class PlayerTest {
 		assertEquals(1, player.getLastDirY());
 	}
 
+	// DOMÍNIO
 	@Test
 	void shouldMoveLeftAndUpdateLastDirection() {
 		Player player = new Player(2, 2);
@@ -142,6 +154,7 @@ public class PlayerTest {
 		assertEquals(0, player.getLastDirY());
 	}
 
+	// DOMÍNIO
 	@Test
 	void shouldMoveRightAndUpdateLastDirection() {
 		Player player = new Player(2, 2);
@@ -154,7 +167,7 @@ public class PlayerTest {
 		assertEquals(0, player.getLastDirY());
 	}
 
-
+	// DOMÍNIO
 	@Test
 	void shouldResetCollectedKeys() {
 		Player player = new Player(1, 1);
@@ -168,6 +181,7 @@ public class PlayerTest {
 		assertFalse(player.hasAllKeys());
 	}
 
+	// DOMÍNIO
 	@Test
 	void shouldStartWithoutShootingAndAmmo() {
 		Player player = new Player(1, 1);
@@ -177,6 +191,7 @@ public class PlayerTest {
 		assertFalse(player.hasAmmo());
 	}
 
+	// DOMÍNIO
 	@Test
 	void shouldUnlockShootingAndFillAmmo() {
 		Player player = new Player(1, 1);
@@ -188,6 +203,7 @@ public class PlayerTest {
 		assertTrue(player.hasAmmo());
 	}
 
+	// DOMÍNIO E FRONTEIRA
 	@Test
 	void shouldDecreaseAmmoUntilZeroAndNotGoNegative() {
 		Player player = new Player(1, 1);

@@ -127,6 +127,7 @@ class GamePanelTest {
         return (List<Enemy>) getField(panel, "enemies");
     }
 
+    // DOMÍNIO E ESTRUTURAL
     @Test
     void shouldInitializeDefaultStateInConstructor() {
         GamePanel panel = createPanelWithStoppedTimer();
@@ -142,6 +143,7 @@ class GamePanelTest {
         assertTrue(projectiles(panel).isEmpty());
     }
 
+    // DOMÍNIO E ESTRUTURAL
     @Test
     void shouldLoadLevel2WhenCalledReflectively() {
         GamePanel panel = createPanelWithStoppedTimer();
@@ -159,6 +161,7 @@ class GamePanelTest {
         assertTrue(projectiles(panel).isEmpty());
     }
 
+    // ESTRUTURAL
     @Test
     void shouldReturnImmediatelyFromUpdateWhenGameAlreadyEnded() {
         GamePanel panel = createPanelWithStoppedTimer();
@@ -178,6 +181,7 @@ class GamePanelTest {
         assertEquals(11, (int) getField(panel, "framesLeft"));
     }
 
+    // FRONTEIRA E ESTRUTURAL
     @Test
     void shouldSetGameOverWhenTimeRunsOut() {
         GamePanel panel = createPanelWithStoppedTimer();
@@ -189,6 +193,7 @@ class GamePanelTest {
         assertEquals(0, (int) getField(panel, "framesLeft"));
     }
 
+    // DOMÍNIO E ESTRUTURAL
     @Test
     void shouldSetGameOverWhenEnemyTouchesPlayer() {
         GamePanel panel = createPanelWithStoppedTimer();
@@ -207,6 +212,7 @@ class GamePanelTest {
         assertTrue((boolean) getField(panel, "gameOver"));
     }
 
+    // FRONTEIRA E DOMÍNIO
     @Test
     void shouldCreateEnemyProjectileWhenCooldownAllowsShot() {
         GamePanel panel = createPanelWithStoppedTimer();
@@ -228,6 +234,7 @@ class GamePanelTest {
         assertFalse(projectiles(panel).get(0).isPlayerOwned());
     }
 
+    // FRONTEIRA E ESTRUTURAL
     @Test
     void shouldRemoveProjectileWhenHitsWallOrLeavesMap() {
         GamePanel panel = createPanelWithStoppedTimer();
@@ -247,6 +254,7 @@ class GamePanelTest {
         assertTrue(projectiles(panel).isEmpty());
     }
 
+    // DOMÍNIO E ESTRUTURAL
     @Test
     void shouldHandleProjectileCollisionsForPlayerAndEnemyOwnedShots() {
         GamePanel panel = createPanelWithStoppedTimer();
@@ -271,6 +279,7 @@ class GamePanelTest {
         assertTrue((boolean) getField(panel, "gameOver"));
     }
 
+    // DOMÍNIO E FRONTEIRA
     @Test
     void shouldMovePlayerAndHandleWallLockedExitAndShootOnKeyPress() {
         GamePanel panel = createPanelWithStoppedTimer();
@@ -310,6 +319,7 @@ class GamePanelTest {
         assertEquals(1, player.getGridX());
     }
 
+    // DOMÍNIO
     @Test
     void shouldCollectKeysOpenExitAndAdvanceOrWin() {
         GamePanel panel = createPanelWithStoppedTimer();
@@ -349,6 +359,7 @@ class GamePanelTest {
         assertTrue((boolean) getField(panel, "gameWon"));
     }
 
+    // ESTRUTURAL
     @Test
     void shouldPersistWinningScoreWithElapsedTime() {
         InMemoryLeaderboardRepository repository = new InMemoryLeaderboardRepository();
@@ -404,6 +415,7 @@ class GamePanelTest {
         assertDoesNotThrow(() -> panel.paintComponent(graphics));
     }
 
+    // ESTRUTURAL E FRONTEIRA
     @Test
     void shouldDrawAllTileTypesAndIgnoreUnknownType() {
         GamePanel panel = createPanelWithStoppedTimer();
@@ -421,11 +433,191 @@ class GamePanelTest {
         verify(graphics).setColor(Color.CYAN);
     }
 
+    // ESTRUTURAL
     @Test
     void shouldAllowTimerActionToExecuteWithoutExceptions() {
         GamePanel panel = createPanelWithStoppedTimer();
         BufferedImage image = new BufferedImage(300, 300, BufferedImage.TYPE_INT_ARGB);
 
         assertDoesNotThrow(() -> panel.paint(image.getGraphics()));
+    }
+
+    // ESTRUTURAL
+    @Test
+    void shouldExecuteTimerAction() {
+        GamePanel panel = createPanelWithStoppedTimer();
+        Timer timer = (Timer) getField(panel, "gameLoop");
+
+        assertDoesNotThrow(() -> timer.getActionListeners()[0].actionPerformed(null));
+    }
+
+    // FRONTEIRA E ESTRUTURAL
+    @Test
+    void shouldRemoveProjectileWhenOutOfBounds() {
+        GamePanel panel = createPanelWithStoppedTimer();
+        Room room = createRoomForMovementAndPaint();
+        setField(panel, "currentRoom", room);
+        setField(panel, "enemies", new ArrayList<Enemy>());
+
+        List<Projectile> projectiles = new ArrayList<>();
+        projectiles.add(new Projectile(-50, 40, 0, 0, true));
+        projectiles.add(new Projectile(40, -50, 0, 0, true));
+        projectiles.add(new Projectile(1000, 40, 0, 0, true));
+        projectiles.add(new Projectile(40, 1000, 0, 0, true));
+
+        setField(panel, "projectiles", projectiles);
+        invokePrivate(panel, "updateGameLogic", new Class<?>[]{});
+
+        assertTrue(projectiles(panel).isEmpty());
+    }
+
+    // GERADO POR IA (PARA ATINGIR 100% DE COBERTURA)
+    // ESTRUTURAL
+    @Test
+    void shouldNotTriggerCollisionWhenEntitiesMiss() {
+        GamePanel panel = createPanelWithStoppedTimer();
+        Room room = createRoomForMovementAndPaint();
+
+        Player player = new Player(1, 1, room);
+        Enemy enemy = new Enemy(3, 3);
+
+        setField(panel, "currentRoom", room);
+        setField(panel, "player", player);
+        setField(panel, "enemies", new ArrayList<>(List.of(enemy)));
+
+        List<Projectile> projectiles = new ArrayList<>();
+        projectiles.add(new Projectile(60, 60, 0, 0, true));
+        projectiles.add(new Projectile(140, 140, 0, 0, false));
+
+        setField(panel, "projectiles", projectiles);
+        invokePrivate(panel, "updateGameLogic", new Class<?>[]{});
+
+        assertEquals(1, enemies(panel).size());
+        assertFalse((boolean) getField(panel, "gameOver"));
+        assertEquals(2, projectiles(panel).size());
+    }
+
+    // GERADO POR IA (PARA ATINGIR 100% DE COBERTURA)
+    // ESTRUTURAL
+    @Test
+    void shouldPaintWithoutShootingUnlocked() {
+        GamePanel panel = createPanelWithStoppedTimer();
+        Room room = createRoomForMovementAndPaint();
+        Player player = new Player(1, 1, room);
+
+        setField(panel, "currentRoom", room);
+        setField(panel, "player", player);
+        setField(panel, "enemies", new ArrayList<Enemy>());
+
+        BufferedImage image = new BufferedImage(300, 300, BufferedImage.TYPE_INT_ARGB);
+        assertDoesNotThrow(() -> panel.paintComponent(image.getGraphics()));
+    }
+
+    // ESTRUTURAL E FRONTEIRA
+    @Test
+    void shouldHandleKeyAdapterEdgeCases() {
+        GamePanel panel = createPanelWithStoppedTimer();
+        Room room = createLevel1SizedRoom();
+        Player player = new Player(1, 1, room);
+        setField(panel, "currentRoom", room);
+        setField(panel, "player", player);
+        setField(panel, "enemies", new ArrayList<Enemy>());
+        setField(panel, "projectiles", new ArrayList<Projectile>());
+
+        KeyListener input = panel.getKeyListeners()[0];
+
+        setField(panel, "gameWon", true);
+        input.keyPressed(keyPressedEvent(panel, KeyEvent.VK_DOWN));
+        assertEquals(1, player.getGridY());
+        setField(panel, "gameWon", false);
+
+        input.keyPressed(keyPressedEvent(panel, KeyEvent.VK_SPACE));
+        assertTrue(projectiles(panel).isEmpty());
+
+        player.unlockShooting();
+        while(player.hasAmmo()) player.decreaseAmmo();
+        input.keyPressed(keyPressedEvent(panel, KeyEvent.VK_SPACE));
+        assertTrue(projectiles(panel).isEmpty());
+
+        player.setPosition(13, 5, room);
+        input.keyPressed(keyPressedEvent(panel, KeyEvent.VK_RIGHT));
+        assertEquals(13, player.getGridX());
+
+        input.keyPressed(keyPressedEvent(panel, KeyEvent.VK_ENTER));
+        assertEquals(13, player.getGridX());
+    }
+
+
+    // GERADO POR IA (PARA ATINGIR 100% DE COBERTURA)
+    // ESTRUTURAL
+    @Test
+    void shouldNotTriggerCollisionWhenPartiallyMatchingCoordinates() {
+        GamePanel panel = createPanelWithStoppedTimer();
+
+        Room room = createLevel1SizedRoom();
+
+        Player player = new Player(1, 1, room);
+        Enemy enemy = new Enemy(3, 3);
+
+        setField(panel, "currentRoom", room);
+        setField(panel, "player", player);
+        setField(panel, "enemies", new ArrayList<>(List.of(enemy)));
+
+        List<Projectile> projectiles = new ArrayList<>();
+
+        projectiles.add(new Projectile(140, 60, 0, 0, true));
+
+        projectiles.add(new Projectile(60, 140, 0, 0, false));
+
+        setField(panel, "projectiles", projectiles);
+        invokePrivate(panel, "updateGameLogic", new Class<?>[]{});
+
+        assertEquals(1, enemies(panel).size());
+        assertFalse((boolean) getField(panel, "gameOver"));
+        assertEquals(2, projectiles(panel).size());
+    }
+
+    // GERADO POR IA (PARA ATINGIR 100% DE COBERTURA)
+    // DOMÍNIO
+    @Test
+    void shouldSuccessfullyMoveUpAndDownWithoutHittingWalls() {
+        GamePanel panel = createPanelWithStoppedTimer();
+        Room room = createLevel1SizedRoom();
+
+        Player player = new Player(1, 2, room);
+        setField(panel, "currentRoom", room);
+        setField(panel, "player", player);
+        setField(panel, "enemies", new ArrayList<Enemy>());
+        setField(panel, "projectiles", new ArrayList<Projectile>());
+
+        KeyListener input = panel.getKeyListeners()[0];
+
+        input.keyPressed(keyPressedEvent(panel, KeyEvent.VK_UP));
+        assertEquals(1, player.getGridX());
+        assertEquals(1, player.getGridY());
+
+        input.keyPressed(keyPressedEvent(panel, KeyEvent.VK_DOWN));
+        assertEquals(1, player.getGridX());
+        assertEquals(2, player.getGridY());
+    }
+
+    // ESTRUTURAL
+    @Test
+    void shouldNotGameOverWhenPlayerAndEnemyShareOnlyXCoordinate() {
+        GamePanel panel = createPanelWithStoppedTimer();
+        Room room = createRoomForMovementAndPaint();
+
+        Player player = new Player(1, 1, room);
+
+        Enemy enemy = new Enemy(1, 2);
+
+        setField(panel, "currentRoom", room);
+        setField(panel, "player", player);
+        setField(panel, "enemies", new ArrayList<>(List.of(enemy)));
+        setField(panel, "projectiles", new ArrayList<Projectile>());
+
+        invokePrivate(panel, "updateGameLogic", new Class<?>[]{});
+
+        assertFalse((boolean) getField(panel, "gameOver"));
     }
 }
