@@ -12,6 +12,7 @@ import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicLong;
 
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -21,6 +22,27 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 
 class GamePanelTest {
+
+    private static class InMemoryLeaderboardRepository implements LeaderboardRepository {
+        private final List<LeaderboardEntry> entries = new ArrayList<>();
+
+        @Override
+        public void saveScore(String playerName, long completionMillis) {
+            entries.add(new LeaderboardEntry(playerName, completionMillis, "test"));
+        }
+
+        @Override
+        public List<LeaderboardEntry> getTopScores(int limit) {
+            return entries.stream()
+                    .sorted((a, b) -> Long.compare(a.getCompletionMillis(), b.getCompletionMillis()))
+                    .limit(limit)
+                    .toList();
+        }
+
+        public List<LeaderboardEntry> getEntries() {
+            return entries;
+        }
+    }
 
     private GamePanel createPanelWithStoppedTimer() {
         GamePanel panel = new GamePanel();
@@ -325,6 +347,37 @@ class GamePanelTest {
         input.keyPressed(keyPressedEvent(panel, KeyEvent.VK_RIGHT));
 
         assertTrue((boolean) getField(panel, "gameWon"));
+    }
+
+    @Test
+    void shouldPersistWinningScoreWithElapsedTime() {
+        InMemoryLeaderboardRepository repository = new InMemoryLeaderboardRepository();
+        AtomicLong clock = new AtomicLong(1_000L);
+        GamePanel panel = new GamePanel(repository, clock::get);
+        stopTimer(panel);
+
+        Room room = createLevel1SizedRoom();
+        Player player = new Player(13, 5, room);
+        room.openExit(14, 5);
+
+        setField(panel, "currentRoom", room);
+        setField(panel, "player", player);
+        setField(panel, "currentLevel", 2);
+        setField(panel, "enemies", new ArrayList<Enemy>());
+        setField(panel, "projectiles", new ArrayList<Projectile>());
+        setField(panel, "runStartMillis", 1_000L);
+
+        clock.set(3_450L);
+        KeyListener input = panel.getKeyListeners()[0];
+        input.keyPressed(keyPressedEvent(panel, KeyEvent.VK_RIGHT));
+
+        assertTrue((boolean) getField(panel, "gameWon"));
+        assertEquals(1, repository.getEntries().size());
+        assertEquals(2_450L, repository.getEntries().get(0).getCompletionMillis());
+
+        @SuppressWarnings("unchecked")
+        List<LeaderboardEntry> leaderboard = (List<LeaderboardEntry>) getField(panel, "leaderboard");
+        assertEquals(1, leaderboard.size());
     }
 
     @Test

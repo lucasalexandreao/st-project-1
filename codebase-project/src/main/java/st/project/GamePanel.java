@@ -9,6 +9,7 @@ import java.awt.event.KeyEvent;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
+import java.util.function.LongSupplier;
 
 public class GamePanel extends JPanel {
     private final int TILE_SIZE = 40;
@@ -26,11 +27,28 @@ public class GamePanel extends JPanel {
     private List<Enemy> enemies;
     private List<Projectile> projectiles;
 
+    private final LeaderboardRepository leaderboardRepository;
+    private final LongSupplier clock;
+    private long runStartMillis;
+    private boolean scoreSaved;
+    private List<LeaderboardEntry> leaderboard;
+
     private Timer gameLoop;
 
     public GamePanel() {
+        this(createDefaultLeaderboardRepository(), System::currentTimeMillis);
+    }
+
+    GamePanel(LeaderboardRepository leaderboardRepository, LongSupplier clock) {
         enemies = new ArrayList<>();
         projectiles = new ArrayList<>();
+        this.leaderboardRepository = leaderboardRepository;
+        this.clock = clock;
+        this.leaderboard = new ArrayList<>();
+        this.runStartMillis = clock.getAsLong();
+        this.scoreSaved = false;
+
+        loadLeaderboard();
 
         loadLevel1();
 
@@ -49,8 +67,18 @@ public class GamePanel extends JPanel {
         gameLoop.start();
     }
 
+    private static LeaderboardRepository createDefaultLeaderboardRepository() {
+        try {
+            return new JdbcLeaderboardRepository("leaderboard.db");
+        } catch (RuntimeException e) {
+            return new NoOpLeaderboardRepository();
+        }
+    }
+
     private void loadLevel1() {
         currentLevel = 1;
+        runStartMillis = clock.getAsLong();
+        scoreSaved = false;
         framesLeft = 30 * 30; // 30 Segundos
         int[][] layout = {
                 {1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1},
@@ -209,6 +237,7 @@ public class GamePanel extends JPanel {
         if (player.canShoot()) {
             g.drawString("Munição: " + player.getAmmo() + " (Espaço)", 350, 20);
         }
+        drawLeaderboard(g);
 
         // Telas de Fim
         if (gameOver) {
@@ -220,6 +249,44 @@ public class GamePanel extends JPanel {
             g.setFont(new Font("Arial", Font.BOLD, 30));
             g.drawString("VOCÊ ZEROU O JOGO!", 120, 200);
         }
+    }
+
+    private void drawLeaderboard(Graphics g) {
+        g.setColor(Color.WHITE);
+        g.setFont(new Font("Arial", Font.BOLD, 13));
+        g.drawString("Leaderboard (mais rápido)", 350, 45);
+
+        if (leaderboard.isEmpty()) {
+            g.drawString("Sem tempos registrados", 350, 65);
+            return;
+        }
+
+        g.setFont(new Font("Arial", Font.PLAIN, 12));
+        int y = 65;
+        for (int i = 0; i < leaderboard.size(); i++) {
+            LeaderboardEntry entry = leaderboard.get(i);
+            g.drawString((i + 1) + ". " + entry.getPlayerName() + " - " + formatDuration(entry.getCompletionMillis()), 350, y);
+            y += 18;
+        }
+    }
+
+    private String formatDuration(long millis) {
+        return String.format("%.2fs", millis / 1000.0);
+    }
+
+    private void saveWinningScoreIfNeeded() {
+        if (scoreSaved) {
+            return;
+        }
+
+        long elapsed = Math.max(0L, clock.getAsLong() - runStartMillis);
+        leaderboardRepository.saveScore("Player", elapsed);
+        loadLeaderboard();
+        scoreSaved = true;
+    }
+
+    private void loadLeaderboard() {
+        leaderboard = leaderboardRepository.getTopScores(5);
     }
 
     private void drawTile(Graphics g, int x, int y, int type) {
@@ -290,6 +357,7 @@ public class GamePanel extends JPanel {
                     loadLevel2();
                 } else {
                     gameWon = true;
+                    saveWinningScoreIfNeeded();
                 }
             }
         }
