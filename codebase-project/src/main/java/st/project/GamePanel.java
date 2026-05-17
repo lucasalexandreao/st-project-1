@@ -18,36 +18,47 @@ public class GamePanel extends JPanel {
     private Player player;
     private int currentLevel = 1;
 
-    // Status do jogo
     private boolean gameWon = false;
     private boolean gameOver = false;
-    private int framesLeft; // Tempo limite (30 FPS * 30 seg = 900 frames)
+    private int framesLeft;
 
-    // Entidades
     private List<Enemy> enemies;
     private List<Projectile> projectiles;
 
     private final LeaderboardRepository leaderboardRepository;
     private final LongSupplier clock;
+    private final String currentPlayerName;
     private long runStartMillis;
     private boolean scoreSaved;
+    private boolean postGameHandled;
     private List<LeaderboardEntry> leaderboard;
 
     private Timer gameLoop;
 
     public GamePanel() {
-        this(createDefaultLeaderboardRepository(), System::currentTimeMillis);
+        this(createDefaultLeaderboardRepository(), System::currentTimeMillis, "Player");
+    }
+
+    public GamePanel(String playerName) {
+        this(createDefaultLeaderboardRepository(), System::currentTimeMillis, playerName);
     }
 
     GamePanel(LeaderboardRepository leaderboardRepository, LongSupplier clock) {
+        this(leaderboardRepository, clock, "Player");
+    }
+
+    GamePanel(LeaderboardRepository leaderboardRepository, LongSupplier clock, String playerName) {
         enemies = new ArrayList<>();
         projectiles = new ArrayList<>();
         this.leaderboardRepository = leaderboardRepository;
         this.clock = clock;
+        this.currentPlayerName = normalizePlayerName(playerName);
         this.leaderboard = new ArrayList<>();
         this.runStartMillis = clock.getAsLong();
         this.scoreSaved = false;
+        this.postGameHandled = false;
 
+        this.leaderboardRepository.saveCurrentPlayer(this.currentPlayerName);
         loadLeaderboard();
 
         loadLevel1();
@@ -57,7 +68,7 @@ public class GamePanel extends JPanel {
         this.setBackground(Color.BLACK);
         this.addKeyListener(new GameInputAdapter());
 
-        gameLoop = new Timer(1000/30, new ActionListener() {
+        gameLoop = new Timer(1000 / 30, new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
                 updateGameLogic();
@@ -79,7 +90,8 @@ public class GamePanel extends JPanel {
         currentLevel = 1;
         runStartMillis = clock.getAsLong();
         scoreSaved = false;
-        framesLeft = 30 * 30; // 30 Segundos
+        postGameHandled = false;
+        framesLeft = 30 * 30;
         int[][] layout = {
                 {1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1},
                 {1, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 1},
@@ -101,7 +113,7 @@ public class GamePanel extends JPanel {
 
     private void loadLevel2() {
         currentLevel = 2;
-        framesLeft = 30 * 30; // Reseta os 30 Segundos
+        framesLeft = 30 * 30;
         player.unlockShooting();
         player.resetKeys();
 
@@ -123,14 +135,13 @@ public class GamePanel extends JPanel {
 
         enemies.clear();
         projectiles.clear();
-        enemies.add(new Enemy(7, 3)); // Adiciona monstro 1
-        enemies.add(new Enemy(7, 7)); // Adiciona monstro 2
+        enemies.add(new Enemy(7, 3));
+        enemies.add(new Enemy(7, 7));
     }
 
     private void updateGameLogic() {
         if (gameWon || gameOver) return;
 
-        // Limite de Tempo
         framesLeft--;
         if (framesLeft <= 0) {
             gameOver = true;
@@ -138,19 +149,17 @@ public class GamePanel extends JPanel {
 
         for (Enemy e : enemies) {
             if (player.getGridX() == e.getGridX() && player.getGridY() == e.getGridY()) {
-                gameOver = true; // O jogador morre se as posições forem iguais
+                gameOver = true;
             }
         }
 
-        // Atualiza Inimigos
         for (Enemy e : enemies) {
             e.updateCooldown();
             if (e.canShoot()) {
-                // Calcula direção até o jogador
                 double angle = Math.atan2(player.getGridY() - e.getGridY(), player.getGridX() - e.getGridX());
                 int speed = 8;
-                int dx = (int)(Math.cos(angle) * speed);
-                int dy = (int)(Math.sin(angle) * speed);
+                int dx = (int) (Math.cos(angle) * speed);
+                int dy = (int) (Math.sin(angle) * speed);
 
                 int startX = e.getGridX() * TILE_SIZE + TILE_SIZE / 2;
                 int startY = e.getGridY() * TILE_SIZE + TILE_SIZE / 2;
@@ -158,13 +167,11 @@ public class GamePanel extends JPanel {
             }
         }
 
-        // Atualiza Projetéis e Colisões
         Iterator<Projectile> it = projectiles.iterator();
         while (it.hasNext()) {
             Projectile p = it.next();
             p.update();
 
-            // Verifica se bateu na parede
             int gridX = p.getX() / TILE_SIZE;
             int gridY = p.getY() / TILE_SIZE;
             if (gridX >= 0 && gridX < currentRoom.getWidth() && gridY >= 0 && gridY < currentRoom.getHeight()) {
@@ -173,30 +180,31 @@ public class GamePanel extends JPanel {
                     continue;
                 }
             } else {
-                it.remove(); // Saiu do mapa
+                it.remove();
                 continue;
             }
 
-            // Colisões de Tiros
             if (p.isPlayerOwned()) {
-                // Tiro do jogador acerta inimigo
                 Iterator<Enemy> eIt = enemies.iterator();
                 while (eIt.hasNext()) {
                     Enemy e = eIt.next();
                     if (Math.abs(p.getX() - (e.getGridX() * TILE_SIZE + 20)) < 20 &&
                             Math.abs(p.getY() - (e.getGridY() * TILE_SIZE + 20)) < 20) {
-                        eIt.remove(); // Inimigo morre
-                        it.remove();  // Tiro some
+                        eIt.remove();
+                        it.remove();
                         break;
                     }
                 }
             } else {
-                // Tiro do inimigo acerta jogador
                 if (Math.abs(p.getX() - (player.getGridX() * TILE_SIZE + 20)) < 20 &&
                         Math.abs(p.getY() - (player.getGridY() * TILE_SIZE + 20)) < 20) {
-                    gameOver = true; // Jogador morre
+                    gameOver = true;
                 }
             }
+        }
+
+        if (gameOver) {
+            finishGameIfNeeded(false);
         }
     }
 
@@ -204,7 +212,6 @@ public class GamePanel extends JPanel {
     protected void paintComponent(Graphics g) {
         super.paintComponent(g);
 
-        // Desenha Mapa
         int[][] layout = currentRoom.getMapLayout();
         for (int y = 0; y < currentRoom.getHeight(); y++) {
             for (int x = 0; x < currentRoom.getWidth(); x++) {
@@ -212,23 +219,19 @@ public class GamePanel extends JPanel {
             }
         }
 
-        // Desenha Inimigos
         for (Enemy e : enemies) {
             e.draw(g, TILE_SIZE);
         }
 
-        // Desenha Tiros
         for (Projectile p : projectiles) {
             p.draw(g);
         }
 
-        // Desenha Personagem (Se não estiver morto)
         if (!gameOver) {
             g.setColor(Color.GREEN);
             g.fillRect(player.getGridX() * TILE_SIZE, player.getGridY() * TILE_SIZE, TILE_SIZE, TILE_SIZE);
         }
 
-        // UI (Tempo e Chaves)
         g.setColor(Color.WHITE);
         g.setFont(new Font("Arial", Font.BOLD, 14));
         int segundos = framesLeft / 30;
@@ -236,9 +239,7 @@ public class GamePanel extends JPanel {
         if (player.canShoot()) {
             g.drawString("Munição: " + player.getAmmo() + " (Espaço)", 350, 20);
         }
-        drawLeaderboard(g);
 
-        // Telas de Fim
         if (gameOver) {
             g.setColor(Color.RED);
             g.setFont(new Font("Arial", Font.BOLD, 40));
@@ -247,25 +248,6 @@ public class GamePanel extends JPanel {
             g.setColor(Color.YELLOW);
             g.setFont(new Font("Arial", Font.BOLD, 30));
             g.drawString("VOCÊ ZEROU O JOGO!", 120, 200);
-        }
-    }
-
-    private void drawLeaderboard(Graphics g) {
-        g.setColor(Color.WHITE);
-        g.setFont(new Font("Arial", Font.BOLD, 13));
-        g.drawString("Leaderboard (mais rápido)", 350, 45);
-
-        if (leaderboard.isEmpty()) {
-            g.drawString("Sem tempos registrados", 350, 65);
-            return;
-        }
-
-        g.setFont(new Font("Arial", Font.PLAIN, 12));
-        int y = 65;
-        for (int i = 0; i < leaderboard.size(); i++) {
-            LeaderboardEntry entry = leaderboard.get(i);
-            g.drawString((i + 1) + ". " + entry.getPlayerName() + " - " + formatDuration(entry.getCompletionMillis()), 350, y);
-            y += 18;
         }
     }
 
@@ -279,13 +261,51 @@ public class GamePanel extends JPanel {
         }
 
         long elapsed = Math.max(0L, clock.getAsLong() - runStartMillis);
-        leaderboardRepository.saveScore("Player", elapsed);
+        leaderboardRepository.saveScore(currentPlayerName, elapsed);
         loadLeaderboard();
         scoreSaved = true;
     }
 
+    private void finishGameIfNeeded(boolean won) {
+        if (postGameHandled) {
+            return;
+        }
+
+        postGameHandled = true;
+        long elapsed = Math.max(0L, clock.getAsLong() - runStartMillis);
+        if (won) {
+            saveWinningScoreIfNeeded();
+            elapsed = Math.max(0L, clock.getAsLong() - runStartMillis);
+        }
+
+        if (gameLoop != null) {
+            gameLoop.stop();
+        }
+
+        PostGameDialog.PostGameAction action = PostGameDialog.show(this, won, leaderboard, elapsed);
+        if (action == PostGameDialog.PostGameAction.PLAY_AGAIN) {
+            Main.startGame();
+        } else if (action == PostGameDialog.PostGameAction.RETURN_TO_MENU) {
+            Main.showMainMenu();
+        }
+
+        Window window = SwingUtilities.getWindowAncestor(this);
+        if (window != null) {
+            window.dispose();
+        }
+    }
+
     private void loadLeaderboard() {
         leaderboard = leaderboardRepository.getTopScores(5);
+    }
+
+    private String normalizePlayerName(String playerName) {
+        if (playerName == null) {
+            return "Player";
+        }
+
+        String trimmed = playerName.trim();
+        return trimmed.isEmpty() ? "Player" : trimmed;
     }
 
     private void drawTile(Graphics g, int x, int y, int type) {
@@ -315,13 +335,12 @@ public class GamePanel extends JPanel {
             if (gameWon || gameOver) return;
             int key = e.getKeyCode();
 
-            // Atirar (Espaço)
             if (key == KeyEvent.VK_SPACE && player.canShoot() && player.hasAmmo()) {
-                player.decreaseAmmo(); // Gasta 1 tiro da mochila
+                player.decreaseAmmo();
 
                 int px = player.getGridX() * TILE_SIZE + TILE_SIZE / 2;
                 int py = player.getGridY() * TILE_SIZE + TILE_SIZE / 2;
-                int velX = player.getLastDirX() * 12; // Velocidade do tiro do player
+                int velX = player.getLastDirX() * 12;
                 int velY = player.getLastDirY() * 12;
                 projectiles.add(new Projectile(px, py, velX, velY, true));
                 return;
@@ -329,17 +348,17 @@ public class GamePanel extends JPanel {
 
             int nextX = player.getGridX();
             int nextY = player.getGridY();
-            if (key == KeyEvent.VK_UP)    nextY--;
-            if (key == KeyEvent.VK_DOWN)  nextY++;
-            if (key == KeyEvent.VK_LEFT)  nextX--;
+            if (key == KeyEvent.VK_UP) nextY--;
+            if (key == KeyEvent.VK_DOWN) nextY++;
+            if (key == KeyEvent.VK_LEFT) nextX--;
             if (key == KeyEvent.VK_RIGHT) nextX++;
 
             int[][] layout = currentRoom.getMapLayout();
             if (layout[nextY][nextX] == Room.TILE_WALL || layout[nextY][nextX] == Room.TILE_EXIT_LOCKED) return;
 
-            if (key == KeyEvent.VK_UP)    player.moveUp();
-            if (key == KeyEvent.VK_DOWN)  player.moveDown();
-            if (key == KeyEvent.VK_LEFT)  player.moveLeft();
+            if (key == KeyEvent.VK_UP) player.moveUp();
+            if (key == KeyEvent.VK_DOWN) player.moveDown();
+            if (key == KeyEvent.VK_LEFT) player.moveLeft();
             if (key == KeyEvent.VK_RIGHT) player.moveRight();
 
             checkItemsAndPortals();
@@ -356,8 +375,9 @@ public class GamePanel extends JPanel {
                     loadLevel2();
                 } else {
                     gameWon = true;
-                    saveWinningScoreIfNeeded();
+                    finishGameIfNeeded(true);
                 }
             }
         }
-    }}
+    }
+}

@@ -7,6 +7,7 @@ import java.awt.*;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
+import java.util.function.Function;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
@@ -15,6 +16,7 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertSame;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -154,13 +156,18 @@ class MainTest {
             }
         }
 
-        Supplier<JPanel> originalSupplier = Main.gamePanelSupplier;
+        Supplier<String> originalNameSupplier = Main.playerNameSupplier;
+        Function<String, JPanel> originalSupplier = Main.gamePanelSupplier;
         Consumer<JPanel> originalDisplayer = Main.windowDisplayer;
         AtomicBoolean displayed = new AtomicBoolean(false);
         TestPanel panel = new TestPanel();
 
         try {
-            Main.gamePanelSupplier = () -> panel;
+            Main.playerNameSupplier = () -> "  Ana  ";
+            Main.gamePanelSupplier = playerName -> {
+                assertEquals("Ana", playerName);
+                return panel;
+            };
             Main.windowDisplayer = p -> {
                 assertSame(panel, p);
                 displayed.set(true);
@@ -171,6 +178,36 @@ class MainTest {
             assertTrue(displayed.get());
             assertTrue(panel.wasFocusRequested());
         } finally {
+            Main.playerNameSupplier = originalNameSupplier;
+            Main.gamePanelSupplier = originalSupplier;
+            Main.windowDisplayer = originalDisplayer;
+        }
+    }
+
+    // FRONTEIRA
+    @Test
+    void shouldNotStartGameWhenPlayerNameIsMissing() {
+        Supplier<String> originalNameSupplier = Main.playerNameSupplier;
+        Function<String, JPanel> originalSupplier = Main.gamePanelSupplier;
+        Consumer<JPanel> originalDisplayer = Main.windowDisplayer;
+        AtomicBoolean gameCreated = new AtomicBoolean(false);
+        AtomicBoolean displayed = new AtomicBoolean(false);
+
+        try {
+            Main.playerNameSupplier = () -> "   ";
+            Main.gamePanelSupplier = playerName -> {
+                gameCreated.set(true);
+                return new JPanel();
+            };
+            Main.windowDisplayer = panel -> displayed.set(true);
+
+            Main.startGame();
+
+            assertFalse(gameCreated.get());
+            assertFalse(displayed.get());
+            assertNull(Main.requirePlayerName("   "));
+        } finally {
+            Main.playerNameSupplier = originalNameSupplier;
             Main.gamePanelSupplier = originalSupplier;
             Main.windowDisplayer = originalDisplayer;
         }

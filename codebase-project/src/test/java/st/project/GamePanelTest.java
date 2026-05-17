@@ -25,10 +25,16 @@ class GamePanelTest {
 
     private static class InMemoryLeaderboardRepository implements LeaderboardRepository {
         private final List<LeaderboardEntry> entries = new ArrayList<>();
+        private final List<String> currentPlayers = new ArrayList<>();
 
         @Override
         public void saveScore(String playerName, long completionMillis) {
             entries.add(new LeaderboardEntry(playerName, completionMillis, "test"));
+        }
+
+        @Override
+        public void saveCurrentPlayer(String playerName) {
+            currentPlayers.add(playerName);
         }
 
         @Override
@@ -39,8 +45,35 @@ class GamePanelTest {
                     .toList();
         }
 
+        @Override
+        public void createUser(String playerName, String passwordHash, boolean isSuperuser) {
+        }
+
+        @Override
+        public void deleteUser(String playerName) {
+        }
+
+        @Override
+        public User getUser(String playerName) {
+            return null;
+        }
+
+        @Override
+        public List<User> getTopUsersByScore(int limit) {
+            return new ArrayList<>();
+        }
+
+        @Override
+        public List<User> getTopUsersBySessions(int limit) {
+            return new ArrayList<>();
+        }
+
         public List<LeaderboardEntry> getEntries() {
             return entries;
+        }
+
+        public List<String> getCurrentPlayers() {
+            return currentPlayers;
         }
     }
 
@@ -141,6 +174,17 @@ class GamePanelTest {
         assertFalse((boolean) getField(panel, "gameWon"));
         assertTrue(enemies(panel).isEmpty());
         assertTrue(projectiles(panel).isEmpty());
+    }
+
+    // DOMÍNIO E ESTRUTURAL
+    @Test
+    void shouldPersistCurrentPlayerDuringConstruction() {
+        InMemoryLeaderboardRepository repository = new InMemoryLeaderboardRepository();
+        GamePanel panel = new GamePanel(repository, () -> 1_000L, "  Ana  ");
+        stopTimer(panel);
+
+        assertEquals(1, repository.getCurrentPlayers().size());
+        assertEquals("Ana", repository.getCurrentPlayers().get(0));
     }
 
     // DOMÍNIO E ESTRUTURAL
@@ -364,7 +408,7 @@ class GamePanelTest {
     void shouldPersistWinningScoreWithElapsedTime() {
         InMemoryLeaderboardRepository repository = new InMemoryLeaderboardRepository();
         AtomicLong clock = new AtomicLong(1_000L);
-        GamePanel panel = new GamePanel(repository, clock::get);
+        GamePanel panel = new GamePanel(repository, clock::get, "Ana");
         stopTimer(panel);
 
         Room room = createLevel1SizedRoom();
@@ -384,6 +428,7 @@ class GamePanelTest {
 
         assertTrue((boolean) getField(panel, "gameWon"));
         assertEquals(1, repository.getEntries().size());
+        assertEquals("Ana", repository.getEntries().get(0).getPlayerName());
         assertEquals(2_450L, repository.getEntries().get(0).getCompletionMillis());
 
         @SuppressWarnings("unchecked")
