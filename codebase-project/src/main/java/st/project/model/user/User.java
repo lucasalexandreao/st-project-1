@@ -1,4 +1,4 @@
-package st.project;
+package st.project.model.user;
 
 public class User {
     private final String playerName;

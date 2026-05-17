@@ -1,4 +1,4 @@
-package st.project;
+package st.project.model.game;
 
 import java.awt.Color;
 import java.awt.Graphics;

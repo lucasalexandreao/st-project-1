@@ -1,5 +1,11 @@
-package st.project;
+package st.project.view;
 
+import st.project.model.game.*;
+import st.project.model.user.LeaderboardEntry;
+import st.project.repository.LeaderboardRepository;
+import st.project.repository.JdbcLeaderboardRepository;
+import st.project.repository.NoOpLeaderboardRepository;
+import st.project.Main;
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
@@ -249,10 +255,6 @@ public class GamePanel extends JPanel {
             g.setFont(new Font("Arial", Font.BOLD, 30));
             g.drawString("VOCÊ ZEROU O JOGO!", 120, 200);
         }
-    }
-
-    private String formatDuration(long millis) {
-        return String.format("%.2fs", millis / 1000.0);
     }
 
     private void saveWinningScoreIfNeeded() {

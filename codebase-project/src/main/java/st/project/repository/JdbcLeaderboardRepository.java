@@ -1,5 +1,7 @@
-package st.project;
+package st.project.repository;
 
+import st.project.model.user.User;
+import st.project.model.user.LeaderboardEntry;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.PreparedStatement;
@@ -26,7 +28,7 @@ public class JdbcLeaderboardRepository implements LeaderboardRepository {
 
     @Override
     public void saveScore(String playerName, long completionMillis) {
-        String normalizedName = playerName.toLowerCase();
+        String normalizedName = playerName == null ? null : playerName.trim();
         String sql = "INSERT INTO leaderboard (player_name, completion_millis, played_at) VALUES (?, ?, ?)";
         try (Connection connection = DriverManager.getConnection(jdbcUrl)) {
             try (PreparedStatement statement = connection.prepareStatement(sql)) {
@@ -61,7 +63,7 @@ public class JdbcLeaderboardRepository implements LeaderboardRepository {
 
     @Override
     public void saveCurrentPlayer(String playerName) {
-        String normalizedName = playerName.toLowerCase();
+        String normalizedName = playerName == null ? null : playerName.trim();
         String sql = "INSERT INTO players (player_name, last_login, session_count) VALUES (?, ?, 1) "
             + "ON CONFLICT(player_name) DO UPDATE SET last_login = excluded.last_login, session_count = COALESCE(players.session_count, 0) + 1";
         try (Connection connection = DriverManager.getConnection(jdbcUrl);
@@ -130,7 +132,7 @@ public class JdbcLeaderboardRepository implements LeaderboardRepository {
 
     @Override
     public void createUser(String playerName, String passwordHash, boolean isSuperuser) {
-        String normalizedName = playerName.toLowerCase();
+        String normalizedName = playerName == null ? null : playerName.trim();
         String sql = "INSERT OR REPLACE INTO players(player_name, password, total_score, session_count, is_superuser, last_login) VALUES (?, ?, COALESCE((SELECT total_score FROM players WHERE player_name = ?), 0), COALESCE((SELECT session_count FROM players WHERE player_name = ?), 0), ?, ?)";
         try (Connection connection = DriverManager.getConnection(jdbcUrl);
              PreparedStatement stmt = connection.prepareStatement(sql)) {
@@ -148,7 +150,7 @@ public class JdbcLeaderboardRepository implements LeaderboardRepository {
 
     @Override
     public void deleteUser(String playerName) {
-        String normalizedName = playerName.toLowerCase();
+        String normalizedName = playerName == null ? null : playerName.trim();
         String sql = "DELETE FROM players WHERE player_name = ?";
         try (Connection connection = DriverManager.getConnection(jdbcUrl);
              PreparedStatement stmt = connection.prepareStatement(sql)) {

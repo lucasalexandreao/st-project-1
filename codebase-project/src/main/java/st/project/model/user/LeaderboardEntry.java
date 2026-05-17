@@ -1,4 +1,4 @@
-package st.project;
+package st.project.model.user;
 
 public class LeaderboardEntry {
     private final String playerName;

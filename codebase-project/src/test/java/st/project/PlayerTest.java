@@ -1,5 +1,7 @@
 package st.project;
 
+import st.project.model.game.Player;
+import st.project.model.game.Room;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;

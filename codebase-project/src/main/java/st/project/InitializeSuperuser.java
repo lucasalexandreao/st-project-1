@@ -4,9 +4,11 @@ import java.security.MessageDigest;
 import java.util.Base64;
 import java.util.Locale;
 
+import st.project.repository.JdbcLeaderboardRepository;
+
 public class InitializeSuperuser {
     public static void main(String[] args) {
-        LeaderboardRepository repo = new JdbcLeaderboardRepository("leaderboard.db");
+        JdbcLeaderboardRepository repo = new JdbcLeaderboardRepository("leaderboard.db");
 
         // Hash da senha "admin"
         String passwordHash = hashPassword("admin");

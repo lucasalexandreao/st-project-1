@@ -1,4 +1,4 @@
-package st.project;
+package st.project.model.game;
 
 /**
  * Representa um local em 2D. Agora guarda a grade (mapa) visual da sala.

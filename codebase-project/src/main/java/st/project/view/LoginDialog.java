@@ -1,5 +1,7 @@
-package st.project;
+package st.project.view;
 
+import st.project.repository.LeaderboardRepository;
+import st.project.model.user.User;
 import javax.swing.*;
 import java.awt.*;
 import java.security.MessageDigest;

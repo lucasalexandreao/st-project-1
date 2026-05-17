@@ -1,5 +1,6 @@
-package st.project;
+package st.project.view;
 
+import st.project.model.user.LeaderboardEntry;
 import javax.swing.*;
 import java.awt.*;
 import java.util.List;

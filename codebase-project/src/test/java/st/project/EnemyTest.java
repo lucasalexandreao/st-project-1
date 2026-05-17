@@ -1,5 +1,6 @@
 package st.project;
 
+import st.project.model.game.Enemy;
 import org.junit.jupiter.api.Test;
 import java.awt.Color;
 import java.awt.Graphics;

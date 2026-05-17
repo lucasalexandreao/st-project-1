@@ -1,5 +1,7 @@
-package st.project;
+package st.project.repository;
 
+import st.project.model.user.User;
+import st.project.model.user.LeaderboardEntry;
 import java.util.Collections;
 import java.util.List;
 

@@ -1,4 +1,4 @@
-package st.project;
+package st.project.model.game;
 
 public class Player {
     private int gridX;
