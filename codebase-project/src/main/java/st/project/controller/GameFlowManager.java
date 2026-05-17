@@ -1,11 +1,13 @@
 package st.project.controller;
 
 import st.project.model.game.*;
+import st.project.model.user.User;
 import st.project.repository.LeaderboardRepository;
 import st.project.repository.JdbcLeaderboardRepository;
 import st.project.repository.NoOpLeaderboardRepository;
 import st.project.view.GamePanelNew;
 import st.project.view.PostGameDialog;
+import st.project.view.UserManagementDialog;
 import javax.swing.*;
 
 public class GameFlowManager {
@@ -18,7 +20,6 @@ public class GameFlowManager {
         EXIT
     }
 
-    private GameLifecycleState currentState;
     private final LeaderboardRepository repository;
     private final MenuController menuController;
     private final AuthController authController;
@@ -31,7 +32,6 @@ public class GameFlowManager {
         this.repository = createDefaultRepository();
         this.menuController = new MenuController(this::handlePlayClick, this::handleExitClick);
         this.authController = new AuthController(repository);
-        this.currentState = GameLifecycleState.MENU;
     }
 
     public void start() {
@@ -39,7 +39,6 @@ public class GameFlowManager {
     }
 
     private void transitionTo(GameLifecycleState newState) {
-        currentState = newState;
 
         switch (newState) {
             case MENU:
@@ -82,6 +81,13 @@ public class GameFlowManager {
         if (validated == null) {
             transitionTo(GameLifecycleState.MENU);
         } else {
+            User user = repository.getUser(validated);
+            if (user != null && user.isSuperuser()) {
+                new UserManagementDialog(repository, validated).show(null);
+                transitionTo(GameLifecycleState.LOGIN);
+                return;
+            }
+
             currentPlayerName = validated;
             transitionTo(GameLifecycleState.LOADING_GAME);
         }

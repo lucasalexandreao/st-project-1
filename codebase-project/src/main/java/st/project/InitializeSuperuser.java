@@ -10,7 +10,6 @@ public class InitializeSuperuser {
     public static void main(String[] args) {
         JdbcLeaderboardRepository repo = new JdbcLeaderboardRepository("leaderboard.db");
 
-        // Hash da senha "admin"
         String passwordHash = hashPassword("admin");
         String normalizedUsername = "admin".toLowerCase(Locale.ROOT);
 

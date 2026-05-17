@@ -151,9 +151,14 @@ public class JdbcLeaderboardRepository implements LeaderboardRepository {
     @Override
     public void deleteUser(String playerName) {
         String normalizedName = playerName == null ? null : playerName.trim();
+        String deleteScoresSql = "DELETE FROM leaderboard WHERE player_name = ?";
         String sql = "DELETE FROM players WHERE player_name = ?";
         try (Connection connection = DriverManager.getConnection(jdbcUrl);
+             PreparedStatement scoreStmt = connection.prepareStatement(deleteScoresSql);
              PreparedStatement stmt = connection.prepareStatement(sql)) {
+            scoreStmt.setString(1, normalizedName);
+            scoreStmt.executeUpdate();
+
             stmt.setString(1, normalizedName);
             stmt.executeUpdate();
         } catch (SQLException e) {

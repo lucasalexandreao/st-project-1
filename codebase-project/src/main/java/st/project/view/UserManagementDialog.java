@@ -23,11 +23,23 @@ public class UserManagementDialog {
             return;
         }
 
-        JDialog dialog = new JDialog((Frame) SwingUtilities.getWindowAncestor(parent), "Gerenciar Usuários", true);
+        Frame owner = null;
+        if (parent != null) {
+            Window window = SwingUtilities.getWindowAncestor(parent);
+            if (window instanceof Frame) {
+                owner = (Frame) window;
+            }
+        }
+
+        JDialog dialog = new JDialog(owner, "Gerenciar Usuários", true);
         dialog.setDefaultCloseOperation(JDialog.DISPOSE_ON_CLOSE);
         dialog.setResizable(true);
         dialog.setSize(600, 400);
-        dialog.setLocationRelativeTo(parent);
+        if (parent != null) {
+            dialog.setLocationRelativeTo(parent);
+        } else {
+            dialog.setLocationRelativeTo(null);
+        }
 
         JPanel panel = new JPanel(new BorderLayout(10, 10));
         panel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
@@ -43,15 +55,12 @@ public class UserManagementDialog {
 
         // Botões
         JPanel buttonPanel = new JPanel(new FlowLayout());
-        JButton refreshButton = new JButton("Atualizar");
         JButton deleteButton = new JButton("Deletar Usuário");
         JButton closeButton = new JButton("Fechar");
 
-        refreshButton.addActionListener(e -> refreshUserList(userList));
         deleteButton.addActionListener(e -> handleDeleteUser(dialog, userList));
         closeButton.addActionListener(e -> dialog.dispose());
 
-        buttonPanel.add(refreshButton);
         buttonPanel.add(deleteButton);
         buttonPanel.add(closeButton);
 
@@ -62,7 +71,7 @@ public class UserManagementDialog {
     }
 
     private void refreshUserList(JTextArea area) {
-        List<User> users = repository.getTopUsersByScore(100);
+        List<User> users = repository.getTopUsersBySessions(100);
 
         StringBuilder sb = new StringBuilder();
         sb.append("LISTA DE USUÁRIOS\n");
@@ -71,14 +80,14 @@ public class UserManagementDialog {
         if (users.isEmpty()) {
             sb.append("Sem usuários registrados.\n");
         } else {
-            sb.append(String.format("%-15s %-20s %-10s\n", "Usuário", "Tipo", "Pontos"));
+            sb.append(String.format("%-15s %-20s %-10s\n", "Usuário", "Tipo", "Sessões"));
             sb.append("=".repeat(70)).append("\n");
             for (User user : users) {
                 String type = user.isSuperuser() ? "SUPER" : "Normal";
                 sb.append(String.format("%-15s %-20s %-10d\n",
                     user.getPlayerName(),
                     type,
-                    user.getTotalScore()));
+                    user.getSessionCount()));
             }
         }
 

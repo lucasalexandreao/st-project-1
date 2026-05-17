@@ -58,4 +58,30 @@ class JdbcLeaderboardRepositoryTest {
             Files.deleteIfExists(dbFile);
         }
     }
+
+    @Test
+    void shouldDeleteUserAndTheirRuns() throws Exception {
+        Path dbFile = Files.createTempFile("leaderboard-test-delete", ".db");
+        try {
+            JdbcLeaderboardRepository repository = new JdbcLeaderboardRepository(dbFile.toString());
+
+            repository.saveCurrentPlayer("Ana");
+            repository.saveScore("Ana", 4500);
+            repository.saveScore("Ana", 2200);
+
+            repository.deleteUser("Ana");
+
+            assertEquals(0, repository.getTopScores(10).size());
+
+            try (Connection connection = DriverManager.getConnection("jdbc:sqlite:" + dbFile);
+                 PreparedStatement statement = connection.prepareStatement("SELECT player_name FROM players WHERE player_name = ?")) {
+                statement.setString(1, "Ana");
+                try (ResultSet resultSet = statement.executeQuery()) {
+                    assertEquals(false, resultSet.next());
+                }
+            }
+        } finally {
+            Files.deleteIfExists(dbFile);
+        }
+    }
 }
