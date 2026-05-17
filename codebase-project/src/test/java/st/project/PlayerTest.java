@@ -3,25 +3,53 @@ package st.project;
 import st.project.model.game.Player;
 import st.project.model.game.Room;
 import org.junit.jupiter.api.Test;
+import java.util.Random;
 
-import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.*;
 
 public class PlayerTest {
 
 	private Room createValidRoom() {
 		int[][] layout = {
-			{Room.TILE_WALL, Room.TILE_WALL, Room.TILE_WALL, Room.TILE_WALL, Room.TILE_WALL},
-			{Room.TILE_WALL, Room.TILE_FLOOR, Room.TILE_KEY, Room.TILE_FLOOR, Room.TILE_WALL},
-			{Room.TILE_WALL, Room.TILE_KEY, Room.TILE_EXIT_LOCKED, Room.TILE_FLOOR, Room.TILE_WALL},
-			{Room.TILE_WALL, Room.TILE_KEY, Room.TILE_FLOOR, Room.TILE_FLOOR, Room.TILE_WALL},
-			{Room.TILE_WALL, Room.TILE_WALL, Room.TILE_WALL, Room.TILE_WALL, Room.TILE_WALL}
+				{Room.TILE_WALL, Room.TILE_WALL, Room.TILE_WALL, Room.TILE_WALL, Room.TILE_WALL},
+				{Room.TILE_WALL, Room.TILE_FLOOR, Room.TILE_KEY, Room.TILE_FLOOR, Room.TILE_WALL},
+				{Room.TILE_WALL, Room.TILE_KEY, Room.TILE_EXIT_LOCKED, Room.TILE_FLOOR, Room.TILE_WALL},
+				{Room.TILE_WALL, Room.TILE_KEY, Room.TILE_FLOOR, Room.TILE_FLOOR, Room.TILE_WALL},
+				{Room.TILE_WALL, Room.TILE_WALL, Room.TILE_WALL, Room.TILE_WALL, Room.TILE_WALL}
 		};
 
 		return new Room(layout);
+	}
+
+	// PBT (Teste Baseado em Propriedades) / DOMÍNIO E FRONTEIRA
+	@Test
+	void propertyBased_AmmoNeverNegativeRegardlessOfUsage() {
+		Random rand = new Random();
+
+		// Vamos testar 100 jogadores diferentes apertando o botão de atirar uma quantidade aleatória de vezes
+		for (int i = 0; i < 100; i++) {
+			// PRÉ-CONDIÇÃO
+			Player p = new Player(1, 1);
+			p.unlockShooting(); // Garante as 10 munições iniciais
+
+			// AÇÃO (O jogador aperta atirar entre 0 e 50 vezes, tentando bugar a arma)
+			int shotsFired = rand.nextInt(51);
+			for (int j = 0; j < shotsFired; j++) {
+				p.decreaseAmmo();
+			}
+
+			// PÓS-CONDIÇÃO (A Propriedade)
+			// A munição nunca pode furar o chão do zero, mesmo que tente atirar 50 vezes
+			assertTrue(p.getAmmo() >= 0, "A munição vazou para o negativo!");
+
+			if (shotsFired >= 10) {
+				assertEquals(0, p.getAmmo(), "A arma não descarregou corretamente");
+				assertFalse(p.hasAmmo());
+			} else {
+				assertEquals(10 - shotsFired, p.getAmmo(), "Gasto de munição não foi subtraído corretamente");
+				assertTrue(p.hasAmmo());
+			}
+		}
 	}
 
 	// DOMÍNIO
@@ -63,7 +91,7 @@ public class PlayerTest {
 	}
 
 	// FRONTEIRA
-    @Test
+	@Test
 	void shouldThrowWhenSpawnIsOutOfRoomRighterBounds() {
 		Room room = createValidRoom();
 
@@ -115,6 +143,15 @@ public class PlayerTest {
 		assertFalse(player.hasAllKeys());
 		player.collectKey();
 		assertTrue(player.hasAllKeys());
+	}
+
+	// DOMÍNIO
+	@Test
+	void shouldReturnInitialLastDirection() {
+		Player player = new Player(1, 1);
+		// O jogador por padrão deve iniciar olhando para a direita (X = 1, Y = 0)
+		assertEquals(1, player.getLastDirX());
+		assertEquals(0, player.getLastDirY());
 	}
 
 	// DOMÍNIO

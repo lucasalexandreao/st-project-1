@@ -1,9 +1,10 @@
 package st.project;
 
-import st.project.model.game.Projectile;
+import st.project.model.game.Projectile; // Import atualizado
 import org.junit.jupiter.api.Test;
 import java.awt.Color;
 import java.awt.Graphics;
+import java.util.Random;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -11,7 +12,6 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.mockito.Mockito.*;
 
 class ProjectileTest {
-
 
     // DOMÍNIO
     @Test
@@ -23,15 +23,29 @@ class ProjectileTest {
         assertFalse(enemyProjectile.isPlayerOwned());
     }
 
-    // DOMÍNIO
+    // PBT (Teste Baseado em Propriedades) - NOVO!
     @Test
-    void shouldHandleNegativeVelocity() {
-        Projectile projectile = new Projectile(50, 50, -5, -10, true);
+    void propertyBased_ProjectileMovesExactlyAccordingToVelocity() {
+        Random rand = new Random();
 
-        projectile.update();
+        // Vamos gerar 1000 tiros com posições e velocidades completamente aleatórias
+        for(int i = 0; i < 1000; i++) {
+            // PRÉ-CONDIÇÕES (Geradas aleatoriamente)
+            int startX = rand.nextInt(2000) - 1000; // Valores entre -1000 e +1000
+            int startY = rand.nextInt(2000) - 1000;
+            int dx = rand.nextInt(100) - 50;
+            int dy = rand.nextInt(100) - 50;
 
-        assertEquals(45, projectile.getX());
-        assertEquals(40, projectile.getY());
+            Projectile p = new Projectile(startX, startY, dx, dy, true);
+
+            // AÇÃO
+            p.update();
+
+            // PÓS-CONDIÇÃO (A Propriedade/Lei da Física)
+            // Não importa os números loucos que geramos, a posição final DEVE OBRIGATORIAMENTE ser: Posição Atual + Velocidade
+            assertEquals(startX + dx, p.getX(), "O X deve sempre respeitar a lei do movimento uniforme");
+            assertEquals(startY + dy, p.getY(), "O Y deve sempre respeitar a lei do movimento uniforme");
+        }
     }
 
     // ESTRUTURAL
