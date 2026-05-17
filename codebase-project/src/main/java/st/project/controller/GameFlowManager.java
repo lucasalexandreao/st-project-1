@@ -141,7 +141,11 @@ public class GameFlowManager {
         );
 
         if (gameWindow != null) {
+            for (java.awt.event.WindowListener wl : gameWindow.getWindowListeners()) {
+                gameWindow.removeWindowListener(wl);
+            }
             gameWindow.dispose();
+            gameWindow = null; // Boa prática para liberar memória
         }
 
         switch (action) {
