@@ -1,6 +1,5 @@
-package st.project;
+package st.project.model.game;
 
-import st.project.model.game.Room;
 import org.junit.jupiter.api.Test;
 import java.util.Random;
 
