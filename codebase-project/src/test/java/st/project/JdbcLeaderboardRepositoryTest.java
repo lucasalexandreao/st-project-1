@@ -1,7 +1,7 @@
 package st.project;
 
-import st.project.repository.JdbcLeaderboardRepository;
 import st.project.model.user.LeaderboardEntry;
+import st.project.repository.JdbcLeaderboardRepository;
 import org.junit.jupiter.api.Test;
 
 import java.sql.Connection;
