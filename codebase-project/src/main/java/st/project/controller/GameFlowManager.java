@@ -56,10 +56,14 @@ public class GameFlowManager {
             case POST_GAME:
                 handlePostGameState();
                 break;
-            case EXIT:
-                System.exit(0);
+            default:
+                exitApp();
                 break;
         }
+    }
+
+    protected void exitApp() {
+        Runtime.getRuntime().exit(0);
     }
 
     private void handleMenuState() {
@@ -155,7 +159,7 @@ public class GameFlowManager {
             case RETURN_TO_MENU:
                 transitionTo(GameLifecycleState.MENU);
                 break;
-            case CLOSE:
+            default:
                 transitionTo(GameLifecycleState.EXIT);
                 break;
         }
