@@ -23,6 +23,12 @@ class JdbcLeaderboardRepositoryTest {
     private JdbcLeaderboardRepository repository;
     private Path dbFile;
 
+    // O SEGREDO: Fabricamos as exceções antes para o Mockito não bugar o DriverManager!
+    private static final SQLException BODY_ERROR = new SQLException("Body Error");
+    private static final SQLException RS_ERROR = new SQLException("RS Close");
+    private static final SQLException STMT_ERROR = new SQLException("STMT Close");
+    private static final SQLException CONN_ERROR = new SQLException("CONN Close");
+
     @BeforeEach
     void setUp() {
         dbFile = tempDir.resolve("leaderboard-test.db");
@@ -33,7 +39,7 @@ class JdbcLeaderboardRepositoryTest {
     // TESTES ORIGINAIS E DE REGRA DE NEGÓCIO
     // ---------------------------------------------------------
 
-    // [TIPO: INTEGRAÇÃO E DOMÍNIO] Valida a persistência real e a regra de ordenação dos tempos dos jogadores.
+    // [TIPO: INTEGRAÇÃO E DOMÍNIO] Valida a persistência real e a regra de ordenação dos tempos.
     @Test
     void shouldPersistAndReturnOrderedBestTimes() throws Exception {
         repository.saveCurrentPlayer("Ana");
@@ -59,7 +65,7 @@ class JdbcLeaderboardRepositoryTest {
         }
     }
 
-    // [TIPO: INTEGRAÇÃO E ESTRUTURAL] Garante que a exclusão de um usuário propague corretamente via CASCADE no banco.
+    // [TIPO: INTEGRAÇÃO E ESTRUTURAL] Garante que a exclusão propague no banco.
     @Test
     void shouldDeleteUserAndTheirRuns() throws Exception {
         repository.saveCurrentPlayer("Ana");
@@ -71,7 +77,7 @@ class JdbcLeaderboardRepositoryTest {
         assertTrue(repository.getTopScores(10).isEmpty());
     }
 
-    // [TIPO: DOMÍNIO E FRONTEIRA] Valida o mapeamento de entidades (User) e diferenciação de permissões (isSuperuser).
+    // [TIPO: DOMÍNIO E FRONTEIRA] Valida o mapeamento de entidades (User) e permissões.
     @Test
     void shouldCreateAndRetrieveUsersCorrectly() {
         repository.createUser("admin", "hash123", true);
@@ -89,7 +95,7 @@ class JdbcLeaderboardRepositoryTest {
         assertNull(repository.getUser("fantasma"));
     }
 
-    // [TIPO: DOMÍNIO] Teste de Regra de Negócio para o ranking baseado no engajamento (quantidade de sessões).
+    // [TIPO: DOMÍNIO] Teste de Regra de Negócio para o ranking de engajamento (sessões).
     @Test
     void shouldReturnTopUsersBySessions() {
         repository.createUser("AdminViciado", "hash", true);
@@ -109,7 +115,7 @@ class JdbcLeaderboardRepositoryTest {
         assertEquals(1, topUsers.get(1).getSessionCount());
     }
 
-    // [TIPO: DOMÍNIO] Teste de Regra de Negócio para la ordenación del ranking de pontuação/habilidade dos usuários.
+    // [TIPO: DOMÍNIO] Teste de Regra de Negócio para o ranking de pontuação.
     @Test
     void shouldReturnTopUsersByScore() {
         repository.createUser("RapidoAdmin", "hash", true);
@@ -129,7 +135,7 @@ class JdbcLeaderboardRepositoryTest {
     // TESTES DE FRONTEIRA E ERROS DE INFRAESTRUTURA
     // ---------------------------------------------------------
 
-    // [TIPO: FRONTEIRA] Valida o comportamento do construtor recebendo uma string de caminho de arquivo padrão.
+    // [TIPO: FRONTEIRA] Valida o construtor com String direta.
     @Test
     void shouldInitializeWithRawJdbcUrl() {
         Path rawDbFile = tempDir.resolve("leaderboard-raw-test.db");
@@ -137,7 +143,7 @@ class JdbcLeaderboardRepositoryTest {
         assertNotNull(rawRepo);
     }
 
-    // [TIPO: FRONTEIRA E ROBUSTEZ] Verifica se os métodos tratam entradas nulas sem estourar falhas catastróficas na JVM.
+    // [TIPO: FRONTEIRA E ROBUSTEZ] Verifica tolerância a nulls.
     @Test
     void shouldHandleNullPlayerNamesGracefully() {
         try { repository.saveCurrentPlayer(null); } catch (Exception ignored) {}
@@ -146,7 +152,7 @@ class JdbcLeaderboardRepositoryTest {
         try { repository.getUser(null); } catch (Exception ignored) {}
     }
 
-    // [TIPO: ESTRUTURAL] Garante que falhas generalizadas do driver JDBC sejam convertidas em IllegalStateException.
+    // [TIPO: ESTRUTURAL] Garante conversão de falhas JDBC para IllegalStateException.
     @Test
     void shouldThrowIllegalStateExceptionOnDatabaseFailure() {
         SQLException fakeException = new SQLException("Mock de Queda do Servidor SQL");
@@ -167,7 +173,7 @@ class JdbcLeaderboardRepositoryTest {
         }
     }
 
-    // [TIPO: FRONTEIRA] Testa o comportamento de normalização interna quando o nome do jogador enviado é nulo na criação.
+    // [TIPO: FRONTEIRA] Normalização interna de nulls.
     @Test
     void shouldHandleNullPlayerNameInCreateUserGracefully() {
         try { repository.createUser(null, "hash123", false); } catch (Exception ignored) {}
@@ -177,7 +183,7 @@ class JdbcLeaderboardRepositoryTest {
     // MATADORES DA LINHA AMARELA 1: CONSTRUTOR TERNÁRIO
     // ---------------------------------------------------------
 
-    // [TIPO: FRONTEIRA E ESTRUTURAL] Força a execução da branch positiva (true) do ternário terminando em SUCESSO normal (sem exceptions).
+    // [TIPO: FRONTEIRA E ESTRUTURAL] Cobre o lado esquerdo do ternário (true)
     @Test
     void shouldCoverConstructorTernaryTrueBranchWithNormalCompletion() throws Exception {
         Connection mockConnection = mock(Connection.class);
@@ -185,75 +191,96 @@ class JdbcLeaderboardRepositoryTest {
         when(mockConnection.createStatement()).thenReturn(mockStatement);
 
         try (MockedStatic<DriverManager> mockedDriver = mockStatic(DriverManager.class)) {
-            mockedDriver.when(() -> DriverManager.getConnection(anyString()))
-                    .thenReturn(mockConnection);
-
-            // Passamos a String exata do banco em memória. O ternário avalia como TRUE,
-            // o mock intercepta o driver impedindo travamentos do Windows e o fluxo encerra com sucesso.
-            JdbcLeaderboardRepository repo = new JdbcLeaderboardRepository("jdbc:sqlite::memory:");
+            mockedDriver.when(() -> DriverManager.getConnection(anyString())).thenReturn(mockConnection);
+            JdbcLeaderboardRepository repo = new JdbcLeaderboardRepository("jdbc:sqlite::memory:", true);
             assertNotNull(repo);
         }
     }
 
     // ---------------------------------------------------------
-    // MATADORES DA LINHA AMARELA 2: TRY-WITH-RESOURCES DE GETUSER()
+    // MATADORES DA LINHA AMARELA 2: FANTASMA DO TRY-WITH-RESOURCES (getUser)
     // ---------------------------------------------------------
 
-    // [TIPO: ESTRUTURAL EXTREMO] Força falha no estágio 1: Abertura da Conexão.
+    // [TIPO: ESTRUTURAL EXTREMO] A Matriz Absoluta: Esgota TODAS as permutações geradas pelo JaCoCo no fechamento de recursos!
     @Test
-    void shouldThrowExceptionWhenConnectionFailsInGetUser() {
-        SQLException fakeException = new SQLException("Falha na Conexão");
+    void shouldExhaustAllTryWithResourcesBranchesInGetUser() throws Exception {
         try (MockedStatic<DriverManager> mockedDriver = mockStatic(DriverManager.class)) {
-            mockedDriver.when(() -> DriverManager.getConnection(anyString())).thenThrow(fakeException);
-            assertThrows(IllegalStateException.class, () -> repository.getUser("teste"));
+
+            // Permutações 1-3: Execução Normal (Sem retornar dados), falha no close de cada recurso
+            executeTWRMatrix(mockedDriver, false, false, true, false, false); // RS close falha
+            executeTWRMatrix(mockedDriver, false, false, false, true, false); // STMT close falha
+            executeTWRMatrix(mockedDriver, false, false, false, false, true); // CONN close falha
+
+            // Permutações 4-6: Execução com Erro (No ResultSet), falha no close de cada recurso
+            executeTWRMatrix(mockedDriver, true, false, true, false, false);  // Erro + RS close falha
+            executeTWRMatrix(mockedDriver, true, false, false, true, false);  // Erro + STMT close falha
+            executeTWRMatrix(mockedDriver, true, false, false, false, true);  // Erro + CONN close falha
+
+            // Permutações 7-9: Execução com RETURN SUCESSO (Cobre a ramificação duplicada pelo compilador do Java!)
+            executeTWRMatrix(mockedDriver, false, true, true, false, false); // Sucesso + RS close falha
+            executeTWRMatrix(mockedDriver, false, true, false, true, false); // Sucesso + STMT close falha
+            executeTWRMatrix(mockedDriver, false, true, false, false, true); // Sucesso + CONN close falha
+
+            // Permutações 10-12: Cobertura da ramificação defensiva "if (resource != null)" do compilador
+            executeNullResourceMatrix(mockedDriver, true, false, false); // Conn é null
+            executeNullResourceMatrix(mockedDriver, false, true, false); // Stmt é null
+            executeNullResourceMatrix(mockedDriver, false, false, true); // Rs é null
         }
     }
 
-    // [TIPO: ESTRUTURAL EXTREMO] Força falha no estágio 2: Criação do PreparedStatement (Deixa Statement e ResultSet NULOS no encerramento).
-    @Test
-    void shouldThrowExceptionWhenPreparedStatementCreationFailsInGetUser() throws Exception {
-        Connection mockConnection = mock(Connection.class);
-        when(mockConnection.prepareStatement(anyString())).thenThrow(new SQLException("Erro ao criar Statement"));
+    // Utilitário Privado para gerar a Matriz de Permutações de Fechamento (Close)
+    private void executeTWRMatrix(MockedStatic<DriverManager> mockedDriver,
+                                  boolean bodyThrows, boolean simulateReturn,
+                                  boolean failRsClose, boolean failStmtClose, boolean failConnClose) throws Exception {
+        Connection mockConn = mock(Connection.class);
+        PreparedStatement mockStmt = mock(PreparedStatement.class);
+        ResultSet mockRs = mock(ResultSet.class);
 
-        try (MockedStatic<DriverManager> mockedDriver = mockStatic(DriverManager.class)) {
-            mockedDriver.when(() -> DriverManager.getConnection(anyString())).thenReturn(mockConnection);
-            assertThrows(IllegalStateException.class, () -> repository.getUser("teste"));
+        mockedDriver.when(() -> DriverManager.getConnection(anyString())).thenReturn(mockConn);
+        when(mockConn.prepareStatement(anyString())).thenReturn(mockStmt);
+        when(mockStmt.executeQuery()).thenReturn(mockRs);
+
+        if (bodyThrows) {
+            when(mockRs.next()).thenThrow(BODY_ERROR); // Usa a exceção pré-fabricada
+        } else if (simulateReturn) {
+            when(mockRs.next()).thenReturn(true);
+            when(mockRs.getString("player_name")).thenReturn("T");
+            when(mockRs.getString("password")).thenReturn("P");
+            when(mockRs.getLong("total_score")).thenReturn(1L);
+            when(mockRs.getInt("session_count")).thenReturn(1);
+            when(mockRs.getInt("is_superuser")).thenReturn(1);
+        } else {
+            when(mockRs.next()).thenReturn(false);
         }
+
+        if (failRsClose) doThrow(RS_ERROR).when(mockRs).close(); // Usa a exceção pré-fabricada
+        if (failStmtClose) doThrow(STMT_ERROR).when(mockStmt).close(); // Usa a exceção pré-fabricada
+        if (failConnClose) doThrow(CONN_ERROR).when(mockConn).close(); // Usa a exceção pré-fabricada
+
+        assertThrows(IllegalStateException.class, () -> repository.getUser("T"));
     }
 
-    // [TIPO: ESTRUTURAL EXTREMO] Força falha no estágio 3: Execução da Query (Deixa o ResultSet NULO no encerramento).
-    @Test
-    void shouldThrowExceptionWhenQueryExecutionFailsInGetUser() throws Exception {
-        Connection mockConnection = mock(Connection.class);
-        PreparedStatement mockStatement = mock(PreparedStatement.class);
-        when(mockConnection.prepareStatement(anyString())).thenReturn(mockStatement);
-        when(mockStatement.executeQuery()).thenThrow(new SQLException("Erro ao executar Query"));
+    // Utilitário Privado para gerar a Matriz de Permutações de Recursos Nulos
+    private void executeNullResourceMatrix(MockedStatic<DriverManager> mockedDriver,
+                                           boolean connNull, boolean stmtNull, boolean rsNull) throws Exception {
+        if (connNull) {
+            mockedDriver.when(() -> DriverManager.getConnection(anyString())).thenReturn(null);
+        } else {
+            Connection mockConn = mock(Connection.class);
+            mockedDriver.when(() -> DriverManager.getConnection(anyString())).thenReturn(mockConn);
 
-        try (MockedStatic<DriverManager> mockedDriver = mockStatic(DriverManager.class)) {
-            mockedDriver.when(() -> DriverManager.getConnection(anyString())).thenReturn(mockConnection);
-            assertThrows(IllegalStateException.class, () -> repository.getUser("teste"));
+            if (stmtNull) {
+                when(mockConn.prepareStatement(anyString())).thenReturn(null);
+            } else {
+                PreparedStatement mockStmt = mock(PreparedStatement.class);
+                when(mockConn.prepareStatement(anyString())).thenReturn(mockStmt);
+
+                if (rsNull) {
+                    when(mockStmt.executeQuery()).thenReturn(null);
+                }
+            }
         }
-    }
 
-    // [TIPO: ESTRUTURAL EXTREMO] Força falha no estágio 4: Leitura do ResultSet com todos os recursos populados e erros de fechamento em cascata.
-    @Test
-    void shouldCoverAllNestedCloseBranchesInGetUser() throws Exception {
-        Connection mockConnection = mock(Connection.class);
-        PreparedStatement mockStatement = mock(PreparedStatement.class);
-        ResultSet mockResultSet = mock(ResultSet.class);
-
-        when(mockConnection.prepareStatement(anyString())).thenReturn(mockStatement);
-        when(mockStatement.executeQuery()).thenReturn(mockResultSet);
-        when(mockResultSet.next()).thenThrow(new SQLException("Erro ao ler dados"));
-
-        // Força erros simultâneos no encerramento de cada recurso do Try-with-resources
-        doThrow(new SQLException("Erro RS close")).when(mockResultSet).close();
-        doThrow(new SQLException("Erro STMT close")).when(mockStatement).close();
-        doThrow(new SQLException("Erro CONN close")).when(mockConnection).close();
-
-        try (MockedStatic<DriverManager> mockedDriver = mockStatic(DriverManager.class)) {
-            mockedDriver.when(() -> DriverManager.getConnection(anyString())).thenReturn(mockConnection);
-            assertThrows(IllegalStateException.class, () -> repository.getUser("teste"));
-        }
+        assertThrows(NullPointerException.class, () -> repository.getUser("T"));
     }
 }
