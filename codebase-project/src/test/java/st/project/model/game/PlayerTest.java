@@ -3,6 +3,9 @@ package st.project.model.game;
 import org.junit.jupiter.api.Test;
 import java.util.Random;
 
+import net.jqwik.api.ForAll;
+import net.jqwik.api.Property;
+import net.jqwik.api.constraints.IntRange;
 import static org.junit.jupiter.api.Assertions.*;
 
 public class PlayerTest {
@@ -20,33 +23,29 @@ public class PlayerTest {
 	}
 
 	// PBT (Teste Baseado em Propriedades) / DOMÍNIO E FRONTEIRA
-	@Test
-	void propertyBased_AmmoNeverNegativeRegardlessOfUsage() {
-		Random rand = new Random();
+	@Property
+	void propertyBased_AmmoNeverNegativeRegardlessOfUsage(
+			@ForAll @IntRange(min = 0, max = 50) int shotsFired
+	) {
+		// PRÉ-CONDIÇÃO
+		Player p = new Player(1, 1, null);
+		p.unlockShooting(); // Garante as 10 munições iniciais
 
-		// Vamos testar 100 jogadores diferentes apertando o botão de atirar uma quantidade aleatória de vezes
-		for (int i = 0; i < 100; i++) {
-			// PRÉ-CONDIÇÃO
-			Player p = new Player(1, 1);
-			p.unlockShooting(); // Garante as 10 munições iniciais
+		// AÇÃO (O jogador aperta atirar 'shotsFired' vezes, tentando bugar a arma)
+		for (int j = 0; j < shotsFired; j++) {
+			p.decreaseAmmo();
+		}
 
-			// AÇÃO (O jogador aperta atirar entre 0 e 50 vezes, tentando bugar a arma)
-			int shotsFired = rand.nextInt(51);
-			for (int j = 0; j < shotsFired; j++) {
-				p.decreaseAmmo();
-			}
+		// PÓS-CONDIÇÃO (A Propriedade)
+		// A munição nunca pode passar de zero negativamente
+		assertTrue(p.getAmmo() >= 0, "A munição vazou para o negativo!");
 
-			// PÓS-CONDIÇÃO (A Propriedade)
-			// A munição nunca passar de zero negativamente, mesmo que tente atirar 50 vezes
-			assertTrue(p.getAmmo() >= 0, "A munição vazou para o negativo!");
-
-			if (shotsFired >= 10) {
-				assertEquals(0, p.getAmmo(), "A arma não descarregou corretamente");
-				assertFalse(p.hasAmmo());
-			} else {
-				assertEquals(10 - shotsFired, p.getAmmo(), "Gasto de munição não foi subtraído corretamente");
-				assertTrue(p.hasAmmo());
-			}
+		if (shotsFired >= 10) {
+			assertEquals(0, p.getAmmo(), "A arma não descarregou corretamente");
+			assertFalse(p.hasAmmo());
+		} else {
+			assertEquals(10 - shotsFired, p.getAmmo(), "Gasto de munição não foi subtraído corretamente");
+			assertTrue(p.hasAmmo());
 		}
 	}
 

@@ -9,6 +9,9 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.mockito.Mockito.*;
+import net.jqwik.api.ForAll;
+import net.jqwik.api.Property;
+import net.jqwik.api.constraints.IntRange;
 
 class ProjectileTest {
 
@@ -22,29 +25,25 @@ class ProjectileTest {
         assertFalse(enemyProjectile.isPlayerOwned());
     }
 
-    // PBT (Teste Baseado em Propriedades)
-    @Test
-    void propertyBased_ProjectileMovesExactlyAccordingToVelocity() {
-        Random rand = new Random();
+    // PBT (Teste Baseado em Propriedade) (DOMÍNIO)
+    @Property
+    void propertyBased_ProjectileMovesExactlyAccordingToVelocity(
+            @ForAll @IntRange(min = -1000, max = 1000) int startX,
+            @ForAll @IntRange(min = -1000, max = 1000) int startY,
+            @ForAll @IntRange(min = -50, max = 50) int dx,
+            @ForAll @IntRange(min = -50, max = 50) int dy
+    ) {
 
-        // Vamos gerar 1000 tiros com posições e velocidades aleatórias
-        for(int i = 0; i < 1000; i++) {
-            // PRÉ-CONDIÇÕES (Geradas aleatoriamente)
-            int startX = rand.nextInt(2000) - 1000; // Valores entre -1000 e +1000
-            int startY = rand.nextInt(2000) - 1000;
-            int dx = rand.nextInt(100) - 50;
-            int dy = rand.nextInt(100) - 50;
+        // PRÉ-CONDIÇÕES (Geradas automaticamente pelo framework)
+        Projectile p = new Projectile(startX, startY, dx, dy, true);
 
-            Projectile p = new Projectile(startX, startY, dx, dy, true);
+        // AÇÃO
+        p.update();
 
-            // AÇÃO
-            p.update();
-
-            // PÓS-CONDIÇÃO (A Propriedade)
-            // A posição final DEVE OBRIGATORIAMENTE ser: Posição Atual + Velocidade
-            assertEquals(startX + dx, p.getX(), "O X deve sempre respeitar a lei do movimento uniforme");
-            assertEquals(startY + dy, p.getY(), "O Y deve sempre respeitar a lei do movimento uniforme");
-        }
+        // PÓS-CONDIÇÃO (A Propriedade)
+        // A posição final deve ser: Posição Atual + Velocidade
+        assertEquals(startX + dx, p.getX(), "O X deve sempre respeitar a lei do movimento uniforme");
+        assertEquals(startY + dy, p.getY(), "O Y deve sempre respeitar a lei do movimento uniforme");
     }
 
     // ESTRUTURAL

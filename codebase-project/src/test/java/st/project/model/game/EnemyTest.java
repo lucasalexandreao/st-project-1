@@ -8,6 +8,9 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.*;
+import net.jqwik.api.ForAll;
+import net.jqwik.api.Property;
+import net.jqwik.api.constraints.IntRange;
 
 public class EnemyTest {
 
@@ -19,30 +22,31 @@ public class EnemyTest {
         assertEquals(8, enemy.getGridY());
     }
 
-    // PBT (Teste Baseado em Propriedades)
-    @Test
-    void propertyBased_CooldownCyclesCorrectlyOverLongPeriods() {
+    // PBT (Teste Baseado em Propriedades) (DOMÍNIO)
+    @Property
+    void propertyBased_CooldownCyclesCorrectlyOverLongPeriods(
+            @ForAll @IntRange(min = 0, max = 20000) int simulatedFrames
+    ) {
         Enemy enemy = new Enemy(0, 0);
 
         // PRÉ-CONDIÇÃO
-        assertFalse(enemy.canShoot());
+        assertFalse(enemy.canShoot(), "O inimigo não deve poder atirar no frame 0");
 
         int totalShotsFired = 0;
-        int simulatedFrames = 10000; // Simulando mais de 5 minutos de jogo contínuo
 
         // AÇÃO
         for(int i = 1; i <= simulatedFrames; i++) {
             enemy.updateCooldown();
             if (enemy.canShoot()) {
                 totalShotsFired++;
-                // PÓS-CONDIÇÃO IMEDIATA: Uma vez que ele atira, é proibido atirar no próximo milissegundo (cooldown resetou)
-                assertFalse(enemy.canShoot());
+                // PÓS-CONDIÇÃO IMEDIATA: Uma vez que ele atira, é proibido atirar no próximo acesso (cooldown resetou)
+                assertFalse(enemy.canShoot(), "O cooldown não resetou imediatamente após o tiro!");
             }
         }
 
         // PÓS-CONDIÇÃO ESTATÍSTICA (A Propriedade)
-        // Se atiramos a cada 60 frames exatos, em 10.000 frames devemos ter atirado exatamente 166 vezes (10000 / 60)
-        assertEquals(simulatedFrames / 60, totalShotsFired, "O ciclo de tiro não pode dessincronizar com o tempo");
+        // Independentemente de quantos frames rodarem, a proporção matemática deve ser inviolável
+        assertEquals(simulatedFrames / 60, totalShotsFired, "O ciclo de tiro dessincronizou do tempo (60 frames)!");
     }
 
     // ESTRUTURAL

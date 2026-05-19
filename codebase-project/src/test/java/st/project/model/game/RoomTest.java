@@ -3,39 +3,38 @@ package st.project.model.game;
 import org.junit.jupiter.api.Test;
 import java.util.Random;
 
-import static org.junit.jupiter.api.Assertions.assertArrayEquals;
-import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertThrows;
+import net.jqwik.api.ForAll;
+import net.jqwik.api.Property;
+import net.jqwik.api.constraints.IntRange;
+
+import static org.junit.jupiter.api.Assertions.*;
+
 
 class RoomTest {
 
     // PBT (Teste Baseado em Propriedades) / ESTRUTURAL
-    @Test
-    void propertyBased_RoomDimensionsAlwaysMatchInputMatrix() {
-        Random rand = new Random();
+    @Property
+    void propertyBased_RoomDimensionsAlwaysMatchInputMatrix(
+            @ForAll @IntRange(min = 3, max = 22) int width,
+            @ForAll @IntRange(min = 2, max = 21) int height
+    ) {
 
-        // Geramos 100 labirintos com tamanhos bizarros e aleatórios
-        for (int i = 0; i < 100; i++) {
-            // PRÉ-CONDIÇÕES (Larguras e alturas aleatórias)
-            int width = rand.nextInt(20) + 3;  // De 3 a 22 colunas
-            int height = rand.nextInt(20) + 2; // De 2 a 21 linhas
-            int[][] layout = new int[height][width];
+        // PRÉ-CONDIÇÕES (Larguras e alturas aleatórias geradas e controladas pelo JQWik)
+        int[][] layout = new int[height][width];
 
-            // Forçamos as chaves mínimas e a porta para não dar erro no construtor
-            layout[0][0] = Room.TILE_KEY;
-            layout[0][1] = Room.TILE_KEY;
-            layout[0][2] = Room.TILE_KEY;
-            layout[1][0] = Room.TILE_EXIT_LOCKED;
+        // Forçamos as chaves mínimas e a porta para não dar erro no construtor
+        layout[0][0] = Room.TILE_KEY;
+        layout[0][1] = Room.TILE_KEY;
+        layout[0][2] = Room.TILE_KEY;
+        layout[1][0] = Room.TILE_EXIT_LOCKED;
 
-            // AÇÃO
-            Room room = new Room(layout);
+        // AÇÃO
+        Room room = new Room(layout);
 
-            // PÓS-CONDIÇÃO (A Propriedade)
-            // A classe tem que conseguir processar qualquer mapa sem corromper o cálculo da matriz interna
-            assertEquals(width, room.getWidth(), "Largura calculada de forma incorreta!");
-            assertEquals(height, room.getHeight(), "Altura calculada de forma incorreta!");
-        }
+        // PÓS-CONDIÇÃO (A Propriedade)
+        // A classe tem que conseguir processar qualquer mapa sem corromper o cálculo da matriz interna
+        assertEquals(width, room.getWidth(), "Largura calculada de forma incorreta!");
+        assertEquals(height, room.getHeight(), "Altura calculada de forma incorreta!");
     }
 
     // FRONTEIRA
