@@ -230,7 +230,7 @@ class MainTest {
         createdFrame.dispose(); // Limpeza
     }
 
-    // ESTRUTURAL E FRONTEIRA (Cobre a linha amarela: if startupAction == null)
+    // ESTRUTURAL E FRONTEIRA
     @Test
     void shouldNotReassignStartupActionIfItIsNotNull() throws Exception {
         Runnable originalAction = Main.startupAction;
@@ -247,7 +247,7 @@ class MainTest {
         Main.startupAction = originalAction; // Limpeza
     }
 
-    // ESTRUTURAL E FRONTEIRA (Cobre a linha amarela: if panel != null)
+    // ESTRUTURAL E FRONTEIRA
     @Test
     void shouldHandleNullPanelInStartGameQuietly() {
         Supplier<String> origName = Main.playerNameSupplier;

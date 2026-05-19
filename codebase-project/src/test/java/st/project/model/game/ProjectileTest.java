@@ -27,7 +27,7 @@ class ProjectileTest {
     void propertyBased_ProjectileMovesExactlyAccordingToVelocity() {
         Random rand = new Random();
 
-        // Vamos gerar 1000 tiros com posições e velocidades completamente aleatórias
+        // Vamos gerar 1000 tiros com posições e velocidades aleatórias
         for(int i = 0; i < 1000; i++) {
             // PRÉ-CONDIÇÕES (Geradas aleatoriamente)
             int startX = rand.nextInt(2000) - 1000; // Valores entre -1000 e +1000
