@@ -235,7 +235,7 @@ class UserManagementDialogTest {
         }
     }
 
-    // [Caminho 3] Valida casos periféricos de UI: parent null, Window não-Frame, lista vazia e a proteção 'null' do normalizador
+    // [Caminho 3] Valida casos periféricos de UI: parent null, Window = Frame, lista vazia e a proteção 'null' do normalizador
     @Test
     void shouldHandleEdgeCasesNullParentEmptyListAndUnreachableNullCheck() throws Exception {
         User superUser = mock(User.class);
@@ -244,12 +244,20 @@ class UserManagementDialogTest {
         when(mockRepo.getTopUsersBySessions(100)).thenReturn(Collections.emptyList());
 
         try (MockedConstruction<JDialog> dialogMock = mockConstruction(JDialog.class)) {
+
             // 1. Passando parent null
             dialogObj.show(null);
             verify(dialogMock.constructed().get(0)).setLocationRelativeTo(null);
 
-            // 2. Passando parent mas não-Frame
-            dialogObj.show(mockParent);
+            // A MATADORA DA LINHA VERMELHA (SEM DESTRUIR O SWING):
+            // Criamos um JFrame real com um componente dentro para que o SwingUtilities
+            // nativo (não mockado) faça o trabalho e retorne true no "instanceof Frame".
+            JFrame realFrame = new JFrame();
+            JButton realButton = new JButton();
+            realFrame.add(realButton);
+
+            // 2. Passando o componente cujo Ancestral é um Frame
+            dialogObj.show(realButton);
 
             // Valida texto de lista vazia
             ArgumentCaptor<Component> captor = ArgumentCaptor.forClass(Component.class);
@@ -258,10 +266,12 @@ class UserManagementDialogTest {
             JTextArea textArea = (JTextArea) ((JScrollPane) ((BorderLayout) mainPanel.getLayout()).getLayoutComponent(BorderLayout.CENTER)).getViewport().getView();
 
             assertTrue(textArea.getText().contains("Sem usuários registrados."));
+
+            // Libera a memória da janela real
+            realFrame.dispose();
         }
 
-        // 3. Usa Reflection apenas para forçar 100% de line coverage no bloco condicional (if rawUsername == null) de normalizeUsername,
-        // já que o inputDialog nunca manda 'null' para ele graças à trava anterior.
+        // 3. Usa Reflection apenas para forçar 100% de line coverage no bloco condicional (if rawUsername == null) de normalizeUsername.
         Method normalizeMethod = UserManagementDialog.class.getDeclaredMethod("normalizeUsername", String.class);
         normalizeMethod.setAccessible(true);
         assertEquals("", normalizeMethod.invoke(dialogObj, (String) null));
