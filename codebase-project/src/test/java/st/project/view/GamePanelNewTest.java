@@ -59,23 +59,23 @@ class GamePanelNewTest {
             GamePanelNew panel = new GamePanelNew(gameController, repository, "Ana");
 
             Graphics mockGraphics = mock(Graphics.class);
-            // O SEGREDO: Ensina o Pincel Falso a sobreviver ao g.create() interno do Swing!
+            // Ensina o Pincel Falso a sobreviver ao g.create() interno do Swing
             when(mockGraphics.create()).thenReturn(mockGraphics);
 
             // Chamamos a pintura manualmente
             panel.paintComponent(mockGraphics);
 
-            // Verificamos se o Pincel Falso foi repassado para o nosso GameRenderer
+            // Verificamos se o Pincel Falso foi repassado para o GameRenderer
             GameRenderer renderer = rendererMock.constructed().get(0);
             verify(renderer).render(eq(mockGraphics), eq(gameState), eq(player), any(), any(), any(), anyInt(), anyBoolean(), anyBoolean());
         }
     }
 
     // ---------------------------------------------------------
-    // GAME LOOP (O CORAÇÃO DO JOGO)
+    // GAME LOOP
     // ---------------------------------------------------------
 
-    // [TIPO: ESTRUTURAL EXTREMO] Dispara o Timer em modo manual e cobre as branches do estado do jogo.
+    // [TIPO: ESTRUTURAL] Dispara o Timer em modo manual e cobre as branches do estado do jogo.
     @Test
     void shouldExecuteGameLoopLambdaAndHandleFinishCallback() throws Exception {
         ActionListener[] capturedListener = new ActionListener[1];
@@ -136,7 +136,7 @@ class GamePanelNewTest {
     }
 
     // ---------------------------------------------------------
-    // EVENTOS DE TECLADO (KeyAdapter)
+    // EVENTOS DE TECLADO
     // ---------------------------------------------------------
 
     // [TIPO: FRONTEIRA E LÓGICA] Testa todas as combinações complexas do botão SPACE e as direções do jogador.

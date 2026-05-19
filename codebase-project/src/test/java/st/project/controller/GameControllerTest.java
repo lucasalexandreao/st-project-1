@@ -260,7 +260,7 @@ public class GameControllerTest {
     }
 
     // ---------------------------------------------------------
-    // BLOCO 5: COBERTURA MC/DC EXTREMA E REFLECTION PARA CÓDIGO INALCANÇÁVEL
+    // BLOCO 5: COBERTURA MC/DC E REFLECTION PARA CÓDIGO INALCANÇÁVEL
     // ---------------------------------------------------------
 
     // TESTE ESTRUTURAL / MC/DC (Colisão parcial do tiro do JOGADOR)
@@ -294,7 +294,7 @@ public class GameControllerTest {
         assertFalse(state.isGameOver(), "Morreu para tiro de raspão!");
     }
 
-    // TESTE ESTRUTURAL E FRONTEIRA EXTREMA (Reflection no return false e no && de limites)
+    // TESTE ESTRUTURAL E FRONTEIRA (Reflection no return false e no && de limites)
     @Test
     void shouldCoverUnreachableReturnFalseInWallCheck() throws Exception {
         // O isProjectileInWall NUNCA recebe tiro fora da tela em runtime normal.

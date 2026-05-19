@@ -22,7 +22,7 @@ class ProjectileTest {
         assertFalse(enemyProjectile.isPlayerOwned());
     }
 
-    // PBT (Teste Baseado em Propriedades) - NOVO!
+    // PBT (Teste Baseado em Propriedades)
     @Test
     void propertyBased_ProjectileMovesExactlyAccordingToVelocity() {
         Random rand = new Random();
@@ -40,8 +40,8 @@ class ProjectileTest {
             // AÇÃO
             p.update();
 
-            // PÓS-CONDIÇÃO (A Propriedade/Lei da Física)
-            // Não importa os números loucos que geramos, a posição final DEVE OBRIGATORIAMENTE ser: Posição Atual + Velocidade
+            // PÓS-CONDIÇÃO (A Propriedade)
+            // A posição final DEVE OBRIGATORIAMENTE ser: Posição Atual + Velocidade
             assertEquals(startX + dx, p.getX(), "O X deve sempre respeitar a lei do movimento uniforme");
             assertEquals(startY + dy, p.getY(), "O Y deve sempre respeitar a lei do movimento uniforme");
         }

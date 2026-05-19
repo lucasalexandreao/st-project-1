@@ -249,7 +249,6 @@ class UserManagementDialogTest {
             dialogObj.show(null);
             verify(dialogMock.constructed().get(0)).setLocationRelativeTo(null);
 
-            // A MATADORA DA LINHA VERMELHA (SEM DESTRUIR O SWING):
             // Criamos um JFrame real com um componente dentro para que o SwingUtilities
             // nativo (não mockado) faça o trabalho e retorne true no "instanceof Frame".
             JFrame realFrame = new JFrame();

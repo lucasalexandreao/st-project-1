@@ -23,7 +23,6 @@ class JdbcLeaderboardRepositoryTest {
     private JdbcLeaderboardRepository repository;
     private Path dbFile;
 
-    // O SEGREDO: Fabricamos as exceções antes para o Mockito não bugar o DriverManager!
     private static final SQLException BODY_ERROR = new SQLException("Body Error");
     private static final SQLException RS_ERROR = new SQLException("RS Close");
     private static final SQLException STMT_ERROR = new SQLException("STMT Close");
@@ -36,7 +35,7 @@ class JdbcLeaderboardRepositoryTest {
     }
 
     // ---------------------------------------------------------
-    // TESTES ORIGINAIS E DE REGRA DE NEGÓCIO
+    // TESTES DE REGRA DE NEGÓCIO
     // ---------------------------------------------------------
 
     // [TIPO: INTEGRAÇÃO E DOMÍNIO] Valida a persistência real e a regra de ordenação dos tempos.
@@ -143,7 +142,7 @@ class JdbcLeaderboardRepositoryTest {
         assertNotNull(rawRepo);
     }
 
-    // [TIPO: FRONTEIRA E ROBUSTEZ] Verifica tolerância a nulls.
+    // [TIPO: FRONTEIRA] Verifica tolerância a nulls.
     @Test
     void shouldHandleNullPlayerNamesGracefully() {
         try { repository.saveCurrentPlayer(null); } catch (Exception ignored) {}
@@ -179,9 +178,6 @@ class JdbcLeaderboardRepositoryTest {
         try { repository.createUser(null, "hash123", false); } catch (Exception ignored) {}
     }
 
-    // ---------------------------------------------------------
-    // MATADORES DA LINHA AMARELA 1: CONSTRUTOR TERNÁRIO
-    // ---------------------------------------------------------
 
     // [TIPO: FRONTEIRA E ESTRUTURAL] Cobre o lado esquerdo do ternário (true)
     @Test
@@ -197,11 +193,8 @@ class JdbcLeaderboardRepositoryTest {
         }
     }
 
-    // ---------------------------------------------------------
-    // MATADORES DA LINHA AMARELA 2: FANTASMA DO TRY-WITH-RESOURCES (getUser)
-    // ---------------------------------------------------------
 
-    // [TIPO: ESTRUTURAL EXTREMO] A Matriz Absoluta: Esgota TODAS as permutações geradas pelo JaCoCo no fechamento de recursos!
+    // [TIPO: ESTRUTURAL] A Matriz Absoluta: Esgota TODAS as permutações geradas pelo JaCoCo no fechamento de recursos!
     @Test
     void shouldExhaustAllTryWithResourcesBranchesInGetUser() throws Exception {
         try (MockedStatic<DriverManager> mockedDriver = mockStatic(DriverManager.class)) {
@@ -216,7 +209,7 @@ class JdbcLeaderboardRepositoryTest {
             executeTWRMatrix(mockedDriver, true, false, false, true, false);  // Erro + STMT close falha
             executeTWRMatrix(mockedDriver, true, false, false, false, true);  // Erro + CONN close falha
 
-            // Permutações 7-9: Execução com RETURN SUCESSO (Cobre a ramificação duplicada pelo compilador do Java!)
+            // Permutações 7-9: Execução com RETURN SUCESSO (Cobre a ramificação duplicada pelo compilador do Java)
             executeTWRMatrix(mockedDriver, false, true, true, false, false); // Sucesso + RS close falha
             executeTWRMatrix(mockedDriver, false, true, false, true, false); // Sucesso + STMT close falha
             executeTWRMatrix(mockedDriver, false, true, false, false, true); // Sucesso + CONN close falha

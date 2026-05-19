@@ -40,8 +40,6 @@ class GameRendererTest {
     // [TIPO: LÓGICA E ESTRUTURAL] Valida a renderização do mapa e esgota as branches do switch de Tiles
     @Test
     void shouldRenderAllTileTypesAndSkipUnknowns() {
-        // Criamos um mapa forjado contendo TODOS os tipos de blocos mapeados
-        // e incluímos o "0" (ou 99) para forçar o código a passar direto pelo switch (Default oculto)
         int[][] fakeLayout = {
                 {Room.TILE_WALL, Room.TILE_KEY, Room.TILE_EXIT_LOCKED},
                 {Room.TILE_EXIT_OPEN, 0, 99} // 0 e 99 são "chão livre", não têm desenho específico
@@ -51,15 +49,15 @@ class GameRendererTest {
         when(mockRoom.getHeight()).thenReturn(2);
         when(mockRoom.getWidth()).thenReturn(3);
 
-        // Simulamos o estado normal de jogo (rodando)
+        // Simulamos o estado normal de jogo
         renderer.render(mockGraphics, mockState, mockPlayer, mockRoom,
                 Collections.emptyList(), Collections.emptyList(),
                 60, false, false);
 
-        // Verificações cirúrgicas para ver se o Graphics pintou as cores corretas do Switch
+        // Verificações para ver se o Graphics pintou as cores corretas do Switch
         verify(mockGraphics).setColor(Color.DARK_GRAY); // TILE_WALL
-        verify(mockGraphics).setColor(Color.YELLOW);    // TILE_KEY (e VOCÊ ZEROU, mas aqui gameWon é false)
-        verify(mockGraphics).setColor(Color.RED);       // TILE_EXIT_LOCKED (e GAME OVER, mas gameOver é false)
+        verify(mockGraphics).setColor(Color.YELLOW);    // TILE_KEY
+        verify(mockGraphics).setColor(Color.RED);       // TILE_EXIT_LOCKED
         verify(mockGraphics).setColor(Color.CYAN);      // TILE_EXIT_OPEN
 
         // Verifica se o jogador foi desenhado (verde)
@@ -73,7 +71,6 @@ class GameRendererTest {
     // [TIPO: INTEGRAÇÃO E DOMÍNIO] Garante que as listas de entidades repassam o comando de desenho (Delegation)
     @Test
     void shouldRenderEnemiesAndProjectiles() {
-        // Configuramos um mapa minúsculo apenas para não estourar erro de layout
         when(mockRoom.getMapLayout()).thenReturn(new int[][]{{0}});
         when(mockRoom.getHeight()).thenReturn(1);
         when(mockRoom.getWidth()).thenReturn(1);
@@ -85,7 +82,6 @@ class GameRendererTest {
                 Arrays.asList(mockEnemy), Arrays.asList(mockProjectile),
                 60, false, false);
 
-        // Valida se o Renderer "terceirizou" a pintura corretamente para os próprios objetos
         verify(mockEnemy, times(1)).draw(eq(mockGraphics), anyInt());
         verify(mockProjectile, times(1)).draw(mockGraphics);
     }
@@ -120,7 +116,7 @@ class GameRendererTest {
         verify(mockGraphics).drawString("GAME OVER", 180, 200);
     }
 
-    // [TIPO: ESTRUTURAL] Cobre o estado de VITÓRIA (GameWon) e HUD sem arma
+    // [TIPO: ESTRUTURAL] Cobre o estado de GameWon e HUD sem arma
     @Test
     void shouldRenderGameWonStatusAndSimpleHUD() {
         when(mockRoom.getMapLayout()).thenReturn(new int[][]{{0}});

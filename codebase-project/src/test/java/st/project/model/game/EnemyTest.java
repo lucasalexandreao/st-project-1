@@ -19,7 +19,7 @@ public class EnemyTest {
         assertEquals(8, enemy.getGridY());
     }
 
-    // PBT (Teste Baseado em Propriedades) - NOVO!
+    // PBT (Teste Baseado em Propriedades)
     @Test
     void propertyBased_CooldownCyclesCorrectlyOverLongPeriods() {
         Enemy enemy = new Enemy(0, 0);

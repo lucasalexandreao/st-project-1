@@ -41,17 +41,15 @@ class InitializeSuperuserTest {
 
         String hash = (String) hashMethod.invoke(null, "admin");
 
-        // O hash SHA-256 base64 da palavra "admin" é uma constante matemática inquebrável
         assertEquals("jGl25bVBBBW96Qi9Te4V37Fnqchz/Eu4qB9vKrRIqRg=", hash, "O algoritmo de hash foi alterado ou está quebrado!");
     }
 
-    // ESTRUTURAL (Fronteira Extrema / Exceção Forçada via Mock)
+    // ESTRUTURAL
     @Test
     void shouldThrowRuntimeExceptionWhenHashingFails() throws Exception {
-        // Mockamos a classe de criptografia do Java para simular a falha impossível
         try (MockedStatic<java.security.MessageDigest> mockedDigest = mockStatic(java.security.MessageDigest.class)) {
 
-            // Quando pedirem qualquer algoritmo de Hash, mandamos estourar a exceção
+            // Quando houver qualquer algoritmo de Hash, estouramos a exceção
             mockedDigest.when(() -> java.security.MessageDigest.getInstance(anyString()))
                     .thenThrow(new java.security.NoSuchAlgorithmException("Algoritmo inexistente forçado"));
 
@@ -64,7 +62,7 @@ class InitializeSuperuserTest {
                     () -> hashMethod.invoke(null, "admin")
             );
 
-            // PÓS-CONDIÇÃO: O erro original deve ser o RuntimeException que você programou
+            // PÓS-CONDIÇÃO: O erro original deve ser o RuntimeException
             assertTrue(ex.getCause() instanceof RuntimeException);
             assertEquals("Erro ao fazer hash da senha", ex.getCause().getMessage());
         }

@@ -14,8 +14,6 @@ class AuthControllerTest {
     // ESTRUTURAL (Uso de Mockito Interceptor)
     @Test
     void shouldPromptForLoginAndShowDialog() {
-        // Se este teste rodar num servidor sem interface gráfica (ex: GitHub Actions),
-        // nós ignoramos o teste para não estourar HeadlessException ao criar o JFrame.
         if (GraphicsEnvironment.isHeadless()) {
             return;
         }
@@ -25,11 +23,9 @@ class AuthControllerTest {
         // O MockedConstruction intercepta a criação de qualquer "new LoginDialog()"
         try (MockedConstruction<LoginDialog> mocked = mockConstruction(LoginDialog.class,
                 (mock, context) -> {
-                    // Dizemos ao dublê: "Quando chamarem o .show(), devolva 'UsuarioMock' imediatamente, sem abrir telas"
                     when(mock.show(any())).thenReturn("UsuarioMock");
                 })) {
 
-            // AÇÃO: Executa o método que antes travava a tela
             String result = controller.promptForLogin();
 
             // PÓS-CONDIÇÃO
@@ -62,7 +58,6 @@ class AuthControllerTest {
     // DOMÍNIO E FRONTEIRA
     @Test
     void shouldValidatePlayerNameCorrectly() {
-        // Passamos null no repositório pois esse método não usa o banco de dados
         AuthController controller = new AuthController(null);
 
         // Fronteira: Nulo

@@ -37,7 +37,7 @@ public class PlayerTest {
 			}
 
 			// PÓS-CONDIÇÃO (A Propriedade)
-			// A munição nunca pode furar o chão do zero, mesmo que tente atirar 50 vezes
+			// A munição nunca passar de zero negativamente, mesmo que tente atirar 50 vezes
 			assertTrue(p.getAmmo() >= 0, "A munição vazou para o negativo!");
 
 			if (shotsFired >= 10) {

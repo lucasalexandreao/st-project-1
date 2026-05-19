@@ -131,7 +131,7 @@ class RankingDialogTest {
 
         LeaderboardEntry largeMillis = mock(LeaderboardEntry.class);
         when(largeMillis.getPlayerName()).thenReturn("Slow");
-        when(largeMillis.getCompletionMillis()).thenReturn(350500L); // 350.50s
+        when(largeMillis.getCompletionMillis()).thenReturn(350500L);
 
         when(mockRepository.getTopScores(10)).thenReturn(List.of(zeroMillis, largeMillis));
         when(mockRepository.getTopUsersBySessions(10)).thenReturn(Collections.emptyList());
@@ -190,7 +190,6 @@ class RankingDialogTest {
         return user;
     }
 
-    // --- Método utilitário para navegar na estrutura da UI gerada ---
     private JTextArea getTextAreaFromTab(JTabbedPane tabbedPane, int index) {
         JPanel panel = (JPanel) tabbedPane.getComponentAt(index);
         JScrollPane scrollPane = (JScrollPane) panel.getComponent(0); 

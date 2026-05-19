@@ -31,7 +31,7 @@ class RoomTest {
             // AÇÃO
             Room room = new Room(layout);
 
-            // PÓS-CONDIÇÃO (A Propriedade Estrutural)
+            // PÓS-CONDIÇÃO (A Propriedade)
             // A classe tem que conseguir processar qualquer mapa sem corromper o cálculo da matriz interna
             assertEquals(width, room.getWidth(), "Largura calculada de forma incorreta!");
             assertEquals(height, room.getHeight(), "Altura calculada de forma incorreta!");

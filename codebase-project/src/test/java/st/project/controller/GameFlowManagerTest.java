@@ -159,7 +159,6 @@ class GameFlowManagerTest {
 
         try (MockedConstruction<MenuController> menuMock = mockConstruction(MenuController.class,
                 (mock, context) -> {
-                    // O SEGREDO ESTÁ AQUI: Ignora as sobreposições feitas por outros managers!
                     if (menuCallbacks[0] == null) {
                         menuCallbacks[0] = (Runnable) context.arguments().get(0);
                         menuCallbacks[1] = (Runnable) context.arguments().get(1);
@@ -217,7 +216,6 @@ class GameFlowManagerTest {
 
             verify(menuMock.constructed().get(0), times(2)).showMainMenu();
 
-            // NullManager é instanciado, mas o Array não será mais sobrescrito!
             GameFlowManager nullManager = new GameFlowManager() {
                 @Override protected void exitApp() {}
             };
@@ -243,14 +241,9 @@ class GameFlowManagerTest {
         }
     }
 
-    // ---------------------------------------------------------
-    // ASSASSINOS DE LINHAS AMARELAS E VERMELHAS (SNIPERS)
-    // ---------------------------------------------------------
-
-    // [TIPO: ESTRUTURAL] Cobre as sub-condições do if de Post-Game (Amarelas 2 e 3)
+    // [TIPO: ESTRUTURAL] Cobre as sub-condições do if de Post-Game
     @Test
     void shouldHandlePostGameSubConditions() throws Exception {
-        // CORREÇÃO: Colocamos o MockedConstruction do Menu ANTES de instanciar o Manager!
         try (MockedConstruction<MenuController> menuMock = mockConstruction(MenuController.class);
              MockedStatic<PostGameDialog> postGameMock = mockStatic(PostGameDialog.class)) {
 
@@ -276,17 +269,15 @@ class GameFlowManagerTest {
             postGameMock.when(() -> PostGameDialog.show(any(), anyBoolean(), any(), anyLong()))
                     .thenReturn(PostGameDialog.PostGameAction.RETURN_TO_MENU);
 
-            // Dispara POST_GAME: passa pelo primeiro if, mas ignora o Window.dispose() pois a janela é nula!
+            // Dispara POST_GAME: passa pelo primeiro if, mas ignora o Window.dispose() pois a janela é nula
             transitionTo.invoke(manager, GameFlowManager.GameLifecycleState.POST_GAME);
             verify(menuMock.constructed().get(0), times(2)).showMainMenu();
         }
     }
 
-    // [TIPO: ESTRUTURAL EXTREMO] Executa o lambda oculto de Fim de Jogo (Linha Vermelha 2)
+    // [TIPO: ESTRUTURAL EXTREMO] Executa o lambda oculto de Fim de Jogo
     @Test
     void shouldExecuteHiddenLambdaFromGamePanel() throws Exception {
-        // CORREÇÃO: Mockamos TANTO o GamePanelNew QUANTO o JFrame.
-        // Assim, o AWT do Java não tenta desenhar uma tela falsa e o NullPointer desaparece!
         try (MockedConstruction<JFrame> frameMock = mockConstruction(JFrame.class);
              MockedConstruction<GamePanelNew> panelMock = mockConstruction(GamePanelNew.class);
              MockedConstruction<MenuController> menuMock = mockConstruction(MenuController.class)) {
@@ -303,7 +294,6 @@ class GameFlowManagerTest {
             ArgumentCaptor<Runnable> lambdaCaptor = ArgumentCaptor.forClass(Runnable.class);
             verify(panel).setOnGameFinished(lambdaCaptor.capture());
 
-            // EXECUTA A LAMBDA MANUALMENTE PARA PINTAR DE VERDE!
             Runnable hiddenLambda = lambdaCaptor.getValue();
             hiddenLambda.run();
 
@@ -312,15 +302,13 @@ class GameFlowManagerTest {
         }
     }
 
-    // [TIPO: ESTRUTURAL EXTREMO] Invade a JVM para testar o System.exit sem fechar o teste (Linha Vermelha 1)
+    // [TIPO: ESTRUTURAL EXTREMO] Invade a JVM para testar o System.exit sem fechar o teste
     @Test
     void shouldExecuteSystemExitSafely() {
         GameFlowManager manager = new GameFlowManager();
 
-        // Salvamos o guarda-costas original do Java
         SecurityManager original = System.getSecurityManager();
         try {
-            // Colocamos nosso próprio guarda-costas para barrar a morte do sistema
             System.setSecurityManager(new SecurityManager() {
                 @Override
                 public void checkPermission(java.security.Permission perm) {} // Permite tudo
@@ -329,35 +317,27 @@ class GameFlowManagerTest {
                     throw new SecurityException("EXIT_INTERCEPTED"); // Impede a morte e lança erro!
                 }
             });
-            // O sistema tenta morrer, o guarda-costas impede, e o JUnit fica feliz!
             assertThrows(SecurityException.class, manager::exitApp);
 
         } catch (UnsupportedOperationException e) {
-            // OBSERVAÇÃO: A partir do Java 18, o SecurityManager foi banido.
-            // Se o seu Java for novinho, ele vai ignorar esse teste. Se for Java 17 ou inferior, a linha ficará 100% verde!
             System.out.println("Java moderno detectado. Teste de System.exit ignorado por segurança do SO.");
         } finally {
             try {
-                System.setSecurityManager(original); // Devolve o guarda-costas original
+                System.setSecurityManager(original);
             } catch (UnsupportedOperationException ignored) {}
         }
     }
 
-    // ---------------------------------------------------------
-    // ASSASSINOS FINAIS: LINHA VERMELHA E LINHAS AMARELAS
-    // ---------------------------------------------------------
-
-    // [TIPO: ESTRUTURAL EXTREMO] Intercepta a morte do sistema simulando o Runtime nativo do Java!
+    // [TIPO: ESTRUTURAL] Intercepta a morte do sistema simulando o Runtime nativo do Java!
     @Test
     void shouldCoverExitAppWithoutKillingJVM() {
         GameFlowManager manager = new GameFlowManager();
 
-        // Sequestramos a classe Runtime para que ela não mate a nossa execução de testes
         try (MockedStatic<Runtime> mockedRuntime = mockStatic(Runtime.class)) {
             Runtime mockInstance = mock(Runtime.class);
             mockedRuntime.when(Runtime::getRuntime).thenReturn(mockInstance);
 
-            manager.exitApp(); // A linha vermelha vai rodar perfeitamente!
+            manager.exitApp();
 
             // Validamos que o código realmente tentou desligar o sistema com status 0
             verify(mockInstance).exit(0);

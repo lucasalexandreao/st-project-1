@@ -149,7 +149,7 @@ class MainTest {
         }
     }
 
-    // ESTRUTURAL (Solução Definitiva: O Extrator de Filas)
+    // ESTRUTURAL
     @Test
     void shouldCallGameFlowManagerWhenMainMethodOrShowMainMenuIsInvoked() {
         Runnable originalAction = Main.startupAction;
@@ -157,7 +157,7 @@ class MainTest {
         try (MockedStatic<SwingUtilities> swingMock = mockStatic(SwingUtilities.class);
              MockedConstruction<GameFlowManager> flowMock = mockConstruction(GameFlowManager.class)) {
 
-            // 1. Em vez de rodar dentro do Mock (o que cega o JaCoCo), nós apenas GUARDAMOS as tarefas num balde.
+            // Em vez de rodar dentro do Mock (o que cega o JaCoCo), apenas guardamos as tarefas num balde.
             java.util.List<Runnable> tasks = new java.util.ArrayList<>();
             swingMock.when(() -> SwingUtilities.invokeLater(any(Runnable.class)))
                     .thenAnswer(invocation -> {
@@ -171,8 +171,6 @@ class MainTest {
             Main.main(new String[0]);
             Main.showMainMenu();
 
-            // 2. O TRUQUE DE MESTRE: Rodamos todas as tarefas no nosso próprio loop, na Thread do teste!
-            // Como as tarefas geram novas tarefas (nested lambdas), o tamanho da lista cresce enquanto o loop roda.
             for (int i = 0; i < tasks.size(); i++) {
                 tasks.get(i).run();
             }
@@ -190,7 +188,6 @@ class MainTest {
         try (MockedStatic<SwingUtilities> swingMock = mockStatic(SwingUtilities.class);
              MockedConstruction<st.project.controller.GameFlowManager> mocked = mockConstruction(st.project.controller.GameFlowManager.class)) {
 
-            // Preparamos o balde de captura
             java.util.List<Runnable> tasks = new java.util.ArrayList<>();
             swingMock.when(() -> SwingUtilities.invokeLater(any(Runnable.class)))
                     .thenAnswer(invocation -> {
@@ -198,10 +195,8 @@ class MainTest {
                         return null;
                     });
 
-            // Executa a lambda original real (que vai jogar a lambda interna no nosso balde)
             Main.startupAction.run();
 
-            // Despejamos o balde e rodamos tudo!
             for (int i = 0; i < tasks.size(); i++) {
                 tasks.get(i).run();
             }
@@ -283,8 +278,6 @@ class MainTest {
     void shouldExecuteDefaultPlayerNameSupplier() {
         if (GraphicsEnvironment.isHeadless()) return;
 
-        // O SEGREDO: Em vez de lutar com robôs, interceptamos o JOptionPane!
-        // Assim a lambda executa 100% de forma síncrona, e o JaCoCo consegue ler perfeitamente.
         try (MockedStatic<JOptionPane> optionPaneMock = mockStatic(JOptionPane.class)) {
 
             optionPaneMock.when(() -> JOptionPane.showInputDialog(any(), anyString()))

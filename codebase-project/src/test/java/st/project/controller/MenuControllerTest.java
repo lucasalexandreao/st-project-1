@@ -46,7 +46,7 @@ class MenuControllerTest {
         assertEquals("Jogar", playBtn.getText());
         assertEquals("Sair", exitBtn.getText());
 
-        // 3. AÇÃO: Simulamos o clique do usuário!
+        // 3. AÇÃO: Simulamos o clique do usuário
         playBtn.doClick();
         assertTrue(playClicked.get(), "O callback de Play não foi chamado!");
 
