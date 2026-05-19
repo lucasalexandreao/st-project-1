@@ -170,12 +170,17 @@ public class JdbcLeaderboardRepository implements LeaderboardRepository {
     public User getUser(String playerName) {
         String normalizedName = playerName.toLowerCase();
         String sql = "SELECT player_name, password, total_score, session_count, is_superuser FROM players WHERE player_name = ?";
+
+        User foundUser = null;
+
         try (Connection connection = DriverManager.getConnection(jdbcUrl);
              PreparedStatement stmt = connection.prepareStatement(sql)) {
+
             stmt.setString(1, normalizedName);
+
             try (ResultSet rs = stmt.executeQuery()) {
                 if (rs.next()) {
-                    return new User(
+                    foundUser = new User(
                             rs.getString("player_name"),
                             rs.getString("password"),
                             rs.getLong("total_score"),
@@ -187,7 +192,8 @@ public class JdbcLeaderboardRepository implements LeaderboardRepository {
         } catch (SQLException e) {
             throw new IllegalStateException("Falha ao buscar usuário", e);
         }
-        return null;
+
+        return foundUser;
     }
 
     @Override
