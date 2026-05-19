@@ -108,7 +108,7 @@ class LoginDialogTest {
         dummyParent.dispose();
     }
 
-    // [TIPO: LÓGICA E FRONTEIRA] Valida o bloqueio de autenticação para entradas vazias com Curto-Circuito (Short-Circuit) lógico.
+    // [TIPO: DOMÍNIO E FRONTEIRA] Valida o bloqueio de autenticação para entradas vazias com Curto-Circuito (Short-Circuit) lógico.
     @Test
     void shouldBlockLoginWithEmptyFields() throws Exception {
         try (MockedStatic<JOptionPane> optionMock = mockStatic(JOptionPane.class)) {
@@ -128,7 +128,7 @@ class LoginDialogTest {
         }
     }
 
-    // [TIPO: LÓGICA DE NEGÓCIO] Garante o bloqueio e a emissão do alerta de falha quando o repositório não localiza a entidade na base.
+    // [TIPO: DOMÍNIO] Garante o bloqueio e a emissão do alerta de falha quando o repositório não localiza a entidade na base.
     @Test
     void shouldBlockLoginWhenUserNotFound() throws Exception {
         try (MockedStatic<JOptionPane> optionMock = mockStatic(JOptionPane.class)) {
@@ -142,7 +142,7 @@ class LoginDialogTest {
         }
     }
 
-    // [TIPO: LÓGICA DE SEGURANÇA] Valida a proteção contra acessos não autorizados por comparação falha de hash de senha.
+    // [TIPO: DOMÍNIO] Valida a proteção contra acessos não autorizados por comparação falha de hash de senha.
     @Test
     void shouldBlockLoginWithWrongPassword() throws Exception {
         try (MockedStatic<JOptionPane> optionMock = mockStatic(JOptionPane.class)) {
@@ -158,7 +158,7 @@ class LoginDialogTest {
         }
     }
 
-    // [TIPO: FLUXO FELIZ E ESTADO] Testa o sucesso da autenticação e a gravação do estado (result) antes da destruição da interface.
+    // [TIPO: DOMÍNIO] Testa o sucesso da autenticação e a gravação do estado (result) antes da destruição da interface.
     @Test
     void shouldLoginSuccessfully() throws Exception {
         usernameField.setText("admin");
@@ -174,7 +174,7 @@ class LoginDialogTest {
         verify(mockDialog).dispose();
     }
 
-    // [TIPO: LÓGICA E FRONTEIRA] Testa a matriz de exaustão das condicionais de curto-circuito (||) para o bloqueio de criação de usuários inválidos.
+    // [TIPO: DOMÍNIO E FRONTEIRA] Testa a matriz de exaustão das condicionais de curto-circuito (||) para o bloqueio de criação de usuários inválidos.
     @Test
     void shouldBlockCreateWithEmptyFields() throws Exception {
         try (MockedStatic<JOptionPane> optionMock = mockStatic(JOptionPane.class)) {
@@ -194,7 +194,7 @@ class LoginDialogTest {
         }
     }
 
-    // [TIPO: INTEGRAÇÃO E LÓGICA] Garante a invocação do repositório para o cadastro e o reset do estado da GUI (campos vazios).
+    // [TIPO: INTEGRAÇÃO E DOMÍNIO] Garante a invocação do repositório para o cadastro e o reset do estado da GUI (campos vazios).
     @Test
     void shouldCreateNewUserSuccessfully() throws Exception {
         try (MockedStatic<JOptionPane> optionMock = mockStatic(JOptionPane.class)) {
@@ -214,7 +214,7 @@ class LoginDialogTest {
         }
     }
 
-    // [TIPO: LÓGICA E ESTRUTURAL] Valida a operação de Upsert (Update) garantindo a preservação dos privilégios de administração originais.
+    // [TIPO: DOMÍNIO E ESTRUTURAL] Valida a operação de Upsert (Update) garantindo a preservação dos privilégios de administração originais.
     @Test
     void shouldUpdateExistingUserPasswordSuccessfully() throws Exception {
         try (MockedStatic<JOptionPane> optionMock = mockStatic(JOptionPane.class)) {
