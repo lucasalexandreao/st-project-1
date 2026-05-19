@@ -2,7 +2,6 @@ package st.project.controller;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import st.project.model.GameConfig;
 import st.project.model.game.*;
 import st.project.model.user.LeaderboardEntry;
 import st.project.model.user.User;
