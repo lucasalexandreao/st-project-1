@@ -5,9 +5,12 @@ import org.junit.jupiter.api.Test;
 import st.project.model.game.*;
 
 import java.awt.*;
+import java.awt.image.BufferedImage;
+import java.lang.reflect.Field;
 import java.util.Arrays;
 import java.util.Collections;
 
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.contains;
@@ -37,6 +40,112 @@ class GameRendererTest {
         when(mockPlayer.getAmmo()).thenReturn(5);
     }
 
+    // ---------------------------------------------------------
+    // COBERTURA 100%: REFLECTION E ESTADOS VISUAIS (NOVOS TESTES)
+    // ---------------------------------------------------------
+
+    // Utilitário para injetar os Mocks nas variáveis privadas e finais do GameRenderer
+    private void setPrivateField(Object obj, String fieldName, Object value) throws Exception {
+        Field field = obj.getClass().getDeclaredField(fieldName);
+        field.setAccessible(true);
+        field.set(obj, value);
+    }
+
+    // [ESTRUTURAL] Força a matemática do mapa para desenhar Árvore, Arbusto e Grama (O Switch do drawWallTile)
+    @Test
+    void shouldRenderAllWallVariantsTreeBushAndGrass() {
+        // Coordenadas escolhidas a dedo para bater em: 0 (Árvore), 1 (Arbusto) e 2 (Grama)
+        int[][] layout = {
+                {Room.TILE_WALL, Room.TILE_WALL},
+                {Room.TILE_FLOOR, Room.TILE_WALL}
+        };
+        when(mockRoom.getMapLayout()).thenReturn(layout);
+        when(mockRoom.getHeight()).thenReturn(2);
+        when(mockRoom.getWidth()).thenReturn(2);
+
+        renderer.render(mockGraphics, mockState, mockPlayer, mockRoom,
+                Collections.emptyList(), Collections.emptyList(), 60, false, false);
+
+        // Verifica a cor exclusiva do tronco da Árvore
+        verify(mockGraphics, atLeastOnce()).setColor(new Color(101, 67, 33));
+        // Verifica a cor exclusiva da ponta do Arbusto
+        verify(mockGraphics, atLeastOnce()).setColor(new Color(110, 195, 65));
+        // Verifica a cor exclusiva da mancha da Grama
+        verify(mockGraphics, atLeastOnce()).setColor(new Color(50, 110, 35));
+    }
+
+    // [ESTRUTURAL] Simula vários frames para cobrir os ifs de Animação e Idle do Jogador
+    @Test
+    void shouldHandlePlayerAnimationAndIdleStates() throws Exception {
+        // Força o SpriteSheet do jogador a fingir que carregou com sucesso
+        SpriteSheet mockSheet = mock(SpriteSheet.class);
+        when(mockSheet.isLoaded()).thenReturn(true);
+        BufferedImage fakeImg = new BufferedImage(1, 1, BufferedImage.TYPE_INT_ARGB);
+        when(mockSheet.getFrame(anyInt(), anyInt())).thenReturn(fakeImg);
+        when(mockSheet.getFrameFlipped(anyInt(), anyInt())).thenReturn(fakeImg);
+        setPrivateField(renderer, "playerSheet", mockSheet);
+
+        when(mockRoom.getMapLayout()).thenReturn(new int[][]{{0}});
+        when(mockRoom.getHeight()).thenReturn(1);
+        when(mockRoom.getWidth()).thenReturn(1);
+
+        // Frame 1: Movendo para direita (LastDirX = 1) - Cobre o facingLeft = false
+        when(mockPlayer.getGridX()).thenReturn(1);
+        when(mockPlayer.getLastDirX()).thenReturn(1);
+        renderer.render(mockGraphics, mockState, mockPlayer, mockRoom, Collections.emptyList(), Collections.emptyList(), 60, false, false);
+
+        // Frame 2: Movendo para a esquerda (LastDirX = -1) - Cobre o facingLeft = true
+        when(mockPlayer.getGridX()).thenReturn(2);
+        when(mockPlayer.getLastDirX()).thenReturn(-1);
+        renderer.render(mockGraphics, mockState, mockPlayer, mockRoom, Collections.emptyList(), Collections.emptyList(), 60, false, false);
+
+        // Frame 3 ao 20: Mantém o jogador parado na mesma posição para o idleTicks subir acima de 15 (IDLE_DELAY)
+        for(int i = 0; i < 20; i++) {
+            renderer.render(mockGraphics, mockState, mockPlayer, mockRoom, Collections.emptyList(), Collections.emptyList(), 60, false, false);
+        }
+
+        // Verifica se usou a imagem normal e a invertida
+        verify(mockSheet, atLeastOnce()).getFrameFlipped(anyInt(), anyInt());
+        verify(mockSheet, atLeastOnce()).getFrame(anyInt(), anyInt());
+    }
+
+    // [ESTRUTURAL] Cobre as branches de imagens válidas para Tiros (Madeira/Bala) e Inimigos
+    @Test
+    void shouldRenderProjectilesAndEnemiesWithLoadedImages() throws Exception {
+        // Injeta os Mocks de Imagens válidas
+        SpriteSheet mockEnemySheet = mock(SpriteSheet.class);
+        when(mockEnemySheet.isLoaded()).thenReturn(true);
+        BufferedImage fakeImg = new BufferedImage(1, 1, BufferedImage.TYPE_INT_ARGB);
+        when(mockEnemySheet.getFrame(anyInt(), anyInt())).thenReturn(fakeImg);
+        when(mockEnemySheet.getFrameFlipped(anyInt(), anyInt())).thenReturn(fakeImg);
+
+        setPrivateField(renderer, "enemySheet", mockEnemySheet);
+        setPrivateField(renderer, "balaImage", fakeImg);
+        setPrivateField(renderer, "madeiraImage", fakeImg);
+
+        when(mockRoom.getMapLayout()).thenReturn(new int[][]{{0}});
+        when(mockRoom.getHeight()).thenReturn(1);
+        when(mockRoom.getWidth()).thenReturn(1);
+        when(mockState.getCurrentLevel()).thenReturn(2); // Nível 2 libera a textura da Madeira (Player)
+
+        // Configura inimigos para testar os dois lados de visão (faceLeft true e false)
+        when(mockPlayer.getGridX()).thenReturn(2);
+        Enemy eLeft = mock(Enemy.class);  when(eLeft.getGridX()).thenReturn(1); // Player > Inimigo (faceLeft=true)
+        Enemy eRight = mock(Enemy.class); when(eRight.getGridX()).thenReturn(3); // Player < Inimigo (faceLeft=false)
+
+        // Configura Tiros para testar os dois donos
+        Projectile pEnemy = mock(Projectile.class);  when(pEnemy.isPlayerOwned()).thenReturn(false);
+        Projectile pPlayer = mock(Projectile.class); when(pPlayer.isPlayerOwned()).thenReturn(true);
+
+        renderer.render(mockGraphics, mockState, mockPlayer, mockRoom,
+                Arrays.asList(eLeft, eRight), Arrays.asList(pEnemy, pPlayer), 60, false, false);
+
+        // Validações
+        verify(mockEnemySheet).getFrameFlipped(anyInt(), anyInt());
+        verify(mockEnemySheet).getFrame(anyInt(), anyInt());
+        // Garante que o Graphics chamou o drawImage para as balas de madeira e as balas inimigas
+        verify(mockGraphics, atLeastOnce()).drawImage(eq(fakeImg), anyInt(), anyInt(), anyInt(), anyInt(), isNull());
+    }
     // ---------------------------------------------------------
     // RENDERIZAÇÃO DE CENÁRIOS E MAPA
     // ---------------------------------------------------------
@@ -166,5 +275,94 @@ class GameRendererTest {
         // Valida a tela de Vitória
         verify(mockGraphics).setColor(Color.YELLOW);
         verify(mockGraphics).drawString("VOCÊ ZEROU O JOGO!", 120, 200);
+    }
+
+    // ---------------------------------------------------------
+    // COBERTURA FINAL: FALLBACKS, TERNARES E MATRIZ BOOLEANA
+    // ---------------------------------------------------------
+
+    // [ESTRUTURAL] Cobre o catch e o operador ternário do método privado loadImage
+    @Test
+    void shouldCoverLoadImageExceptionAndTernary() throws Exception {
+        java.lang.reflect.Method loadImageMethod = GameRenderer.class.getDeclaredMethod("loadImage", String.class);
+        loadImageMethod.setAccessible(true);
+
+        // Caminho 1 (Linha Vermelha): String nula força NullPointerException no getResourceAsStream, caindo no 'catch'
+        Object resultFromNull = loadImageMethod.invoke(renderer, (String) null);
+        assertNull(resultFromNull, "Deveria retornar nulo ao cair no catch");
+
+        // Caminho 2 (Linha Amarela): Caminho inválido faz getResourceAsStream retornar null, cobrindo o lado falso do ternário (is == null)
+        Object resultFromInvalidPath = loadImageMethod.invoke(renderer, "/caminho/invalido.png");
+        assertNull(resultFromInvalidPath, "Deveria retornar nulo pelo operador ternário");
+    }
+
+    // [ESTRUTURAL] Cobre todos os blocos "else" de desenho (Enemy, Projectile e Player sem imagem) e tabelas-verdade do Tiro
+    @Test
+    void shouldCoverRenderFallbacksAndProjectilesBranches() throws Exception {
+        // Força as imagens a estarem nulas ou não carregadas
+        SpriteSheet unloadedSheet = mock(SpriteSheet.class);
+        when(unloadedSheet.isLoaded()).thenReturn(false);
+
+        setPrivateField(renderer, "playerSheet", unloadedSheet);
+        setPrivateField(renderer, "enemySheet", unloadedSheet);
+        setPrivateField(renderer, "balaImage", null);
+        setPrivateField(renderer, "madeiraImage", null);
+
+        when(mockRoom.getMapLayout()).thenReturn(new int[][]{{0}});
+        when(mockRoom.getHeight()).thenReturn(1);
+        when(mockRoom.getWidth()).thenReturn(1);
+
+        Enemy mockEnemy = mock(Enemy.class);
+
+        // Esgotando as Branches (Linhas Amarelas do Projectile)
+        // Cenário A: Tiro de Inimigo, mas balaImage é nula -> Cai no else (p.draw)
+        Projectile pEnemy = mock(Projectile.class);
+        when(pEnemy.isPlayerOwned()).thenReturn(false);
+
+        // Cenário B: Tiro de Player, Nível 1 -> Falha no currentLevel >= 2 -> Cai no else (p.draw)
+        Projectile pPlayerLvl1 = mock(Projectile.class);
+        when(pPlayerLvl1.isPlayerOwned()).thenReturn(true);
+        when(mockState.getCurrentLevel()).thenReturn(1);
+
+        renderer.render(mockGraphics, mockState, mockPlayer, mockRoom,
+                java.util.Collections.singletonList(mockEnemy),
+                java.util.Arrays.asList(pEnemy, pPlayerLvl1), 60, false, false);
+
+        // Cenário C: Tiro de Player, Nível 2, mas madeiraImage é nula -> Cai no else (p.draw)
+        Projectile pPlayerLvl2 = mock(Projectile.class);
+        when(pPlayerLvl2.isPlayerOwned()).thenReturn(true);
+        when(mockState.getCurrentLevel()).thenReturn(2);
+
+        renderer.render(mockGraphics, mockState, mockPlayer, mockRoom,
+                java.util.Collections.emptyList(),
+                java.util.Collections.singletonList(pPlayerLvl2), 60, false, false);
+
+        // VERIFICAÇÕES DE FALLBACKS (As 3 Linhas Vermelhas restantes):
+        verify(mockEnemy, atLeastOnce()).draw(mockGraphics, 40); // Desenha triângulo laranja
+        verify(pEnemy, atLeastOnce()).draw(mockGraphics);        // Desenha bolinha magenta
+        verify(pPlayerLvl1, atLeastOnce()).draw(mockGraphics);   // Desenha bolinha cyan
+        verify(pPlayerLvl2, atLeastOnce()).draw(mockGraphics);   // Desenha bolinha cyan
+        verify(mockGraphics, atLeastOnce()).setColor(Color.GREEN); // Quadrado Verde do Player
+        verify(mockGraphics, atLeastOnce()).fillRect(anyInt(), anyInt(), eq(40), eq(40));
+    }
+
+    // [ESTRUTURAL] Esgota a tabela-verdade do "isMoving" cobrindo o movimento puramente no eixo Y
+    @Test
+    void shouldCoverPlayerIsMovingYAxisBranch() throws Exception {
+        when(mockRoom.getMapLayout()).thenReturn(new int[][]{{0}});
+        when(mockRoom.getHeight()).thenReturn(1);
+        when(mockRoom.getWidth()).thenReturn(1);
+
+        when(mockPlayer.getGridX()).thenReturn(5);
+        when(mockPlayer.getGridY()).thenReturn(5);
+
+        // A branch amarela faltante era: X igual, Y diferente (false || true)
+        setPrivateField(renderer, "lastPlayerX", 5);
+        setPrivateField(renderer, "lastPlayerY", 4);
+
+        renderer.render(mockGraphics, mockState, mockPlayer, mockRoom,
+                java.util.Collections.emptyList(), java.util.Collections.emptyList(), 60, false, false);
+
+        // O teste passa silenciosamente comprovando que a ramificação lógica foi percorrida
     }
 }

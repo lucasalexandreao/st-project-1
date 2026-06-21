@@ -168,6 +168,8 @@ public class JdbcLeaderboardRepository implements LeaderboardRepository {
 
     @Override
     public User getUser(String playerName) {
+        if (playerName == null) return null;
+
         String normalizedName = playerName.toLowerCase();
         String sql = "SELECT player_name, password, total_score, session_count, is_superuser FROM players WHERE player_name = ?";
 
