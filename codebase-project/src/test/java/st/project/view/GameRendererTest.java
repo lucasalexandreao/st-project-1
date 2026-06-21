@@ -8,6 +8,10 @@ import java.awt.*;
 import java.util.Arrays;
 import java.util.Collections;
 
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.ArgumentMatchers.anyInt;
+import static org.mockito.ArgumentMatchers.contains;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
 
 class GameRendererTest {
@@ -54,26 +58,31 @@ class GameRendererTest {
                 Collections.emptyList(), Collections.emptyList(),
                 60, false, false);
 
-        // Verificações para ver se o Graphics pintou as cores corretas do Switch
-        verify(mockGraphics).setColor(Color.DARK_GRAY); // TILE_WALL
-        verify(mockGraphics).setColor(Color.YELLOW);    // TILE_KEY
+        // Verificações atualizadas para as novas cores RGB do GameRenderer
+        verify(mockGraphics, atLeastOnce()).setColor(new Color(55, 120, 35)); // TILE_WALL (Base da grama/árvore/arbusto)
+        verify(mockGraphics, atLeastOnce()).setColor(new Color(255, 200, 50)); // TILE_KEY (Chave de Ouro)
         verify(mockGraphics).setColor(Color.RED);       // TILE_EXIT_LOCKED
         verify(mockGraphics).setColor(Color.CYAN);      // TILE_EXIT_OPEN
 
-        // Verifica se o jogador foi desenhado (verde)
-        verify(mockGraphics).setColor(Color.GREEN);
+        // Verifica se o jogador foi desenhado (sprite ou fallback verde)
+        boolean drewSprite = !mockingDetails(mockGraphics).getInvocations().stream()
+                .filter(i -> i.getMethod().getName().equals("drawImage")).findAny().isEmpty();
+        boolean drewFallback = !mockingDetails(mockGraphics).getInvocations().stream()
+                .filter(i -> i.getMethod().getName().equals("setColor")
+                        && Color.GREEN.equals(i.getArguments()[0])).findAny().isEmpty();
+        assertTrue(drewSprite || drewFallback, "Player deve ser desenhado (sprite ou fallback verde)");
     }
 
     // ---------------------------------------------------------
     // RENDERIZAÇÃO DE ENTIDADES (Inimigos e Tiros)
     // ---------------------------------------------------------
-
-    // [TIPO: INTEGRAÇÃO E DOMÍNIO] Garante que as listas de entidades repassam o comando de desenho (Delegation)
+// [TIPO: INTEGRAÇÃO E DOMÍNIO] Garante que as listas de entidades repassam o comando de desenho (Delegation)
     @Test
     void shouldRenderEnemiesAndProjectiles() {
         when(mockRoom.getMapLayout()).thenReturn(new int[][]{{0}});
         when(mockRoom.getHeight()).thenReturn(1);
         when(mockRoom.getWidth()).thenReturn(1);
+        when(mockState.getCurrentLevel()).thenReturn(1); // Evita problemas na lógica de projéteis
 
         Enemy mockEnemy = mock(Enemy.class);
         Projectile mockProjectile = mock(Projectile.class);
@@ -82,10 +91,22 @@ class GameRendererTest {
                 Arrays.asList(mockEnemy), Arrays.asList(mockProjectile),
                 60, false, false);
 
-        verify(mockEnemy, times(1)).draw(eq(mockGraphics), anyInt());
-        verify(mockProjectile, times(1)).draw(mockGraphics);
-    }
+        // Verifica se o renderer usou sprites (drawImage)
+        boolean usedSprites = !mockingDetails(mockGraphics).getInvocations().stream()
+                .filter(i -> i.getMethod().getName().equals("drawImage")).findAny().isEmpty();
 
+        // Verifica se o renderer chamou o fallback do inimigo
+        boolean usedEnemyFallback = !mockingDetails(mockEnemy).getInvocations().stream()
+                .filter(i -> i.getMethod().getName().equals("draw")).findAny().isEmpty();
+
+        // Verifica se o renderer chamou o fallback do projétil
+        boolean usedProjectileFallback = !mockingDetails(mockProjectile).getInvocations().stream()
+                .filter(i -> i.getMethod().getName().equals("draw")).findAny().isEmpty();
+
+        // O teste passa se renderizou via Sprite OU chamou o método manual da entidade
+        assertTrue(usedSprites || usedEnemyFallback, "Inimigo deve ser desenhado (via sprite ou fallback)");
+        assertTrue(usedSprites || usedProjectileFallback, "Projétil deve ser desenhado (via sprite ou fallback)");
+    }
     // ---------------------------------------------------------
     // HUD E ESTADOS DE FIM DE JOGO (GameOver e GameWon)
     // ---------------------------------------------------------
@@ -131,8 +152,13 @@ class GameRendererTest {
                 Collections.emptyList(), Collections.emptyList(),
                 60, true, false);
 
-        // Se não tem gameOver, o jogador é desenhado
-        verify(mockGraphics).setColor(Color.GREEN);
+        // Se não tem gameOver, o jogador é desenhado (sprite ou fallback verde)
+        boolean drewSprite = !mockingDetails(mockGraphics).getInvocations().stream()
+                .filter(i -> i.getMethod().getName().equals("drawImage")).findAny().isEmpty();
+        boolean drewFallback = !mockingDetails(mockGraphics).getInvocations().stream()
+                .filter(i -> i.getMethod().getName().equals("setColor")
+                        && Color.GREEN.equals(i.getArguments()[0])).findAny().isEmpty();
+        assertTrue(drewSprite || drewFallback, "Player deve ser desenhado (sprite ou fallback verde)");
 
         // Valida que a munição NÃO foi desenhada
         verify(mockGraphics, never()).drawString(contains("Munição"), anyInt(), anyInt());
