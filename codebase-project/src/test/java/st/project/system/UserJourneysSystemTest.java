@@ -20,21 +20,21 @@ public class UserJourneysSystemTest {
 
     @BeforeEach
     void setUpDatabase() throws Exception {
-        // Usa o repositório real para teste de sistema ponta a ponta
+        // Usa o repositório real para teste de sistema
         tempDb = File.createTempFile("system_journeys_", ".db");
         tempDb.deleteOnExit();
         realRepository = new JdbcLeaderboardRepository(tempDb.getAbsolutePath());
     }
 
-    // --- JORNADA 1: JOGADOR COMUM (CRIAR CONTA E ACESSAR JOGO) ---
+    // JOGADOR COMUM (CRIAR CONTA E ACESSAR JOGO)
     @Test
-    void jornadaDeNovoJogadorAutenticandoParaJogar() {
+    void newPlayerJourney() {
         LoginPO loginPage = new LoginPO(realRepository);
 
         // O usuário preenche a tela de login. Como a conta não existe, o sistema a cria e o loga.
         String jogadorAutenticado = loginPage.autenticar("novo_heroi", "senha_forte");
 
-        // Asserção da Jornada: O usuário foi validado e passado para o GameFlowManager
+        // O usuário foi validado e passado para o GameFlowManager
         assertEquals("novo_heroi", jogadorAutenticado);
 
         // Validação de Sistema: O banco de dados foi impactado pela interface
@@ -43,38 +43,38 @@ public class UserJourneysSystemTest {
         assertFalse(userDb.isSuperuser(), "Um novo cadastro via login padrão não deve ser admin");
     }
 
-    // --- JORNADA 2: SUPERUSUÁRIO (LOGIN + GERENCIAMENTO) ---
+    // SUPERUSUÁRIO (LOGIN + GERENCIAMENTO)
     @Test
-    void jornadaAdministrativaGerenciarUsuarios() {
+    void superuserManagementJourney() {
         // Pré-condição do Sistema: Existe um admin e um jogador ruim no banco de produção
         realRepository.createUser("admin_mestre", hashPassword("admin123"), true);
         realRepository.createUser("jogador_toxico", hashPassword("123"), false);
 
-        // Passo 1 da Jornada: Admin faz login na interface
+        // Admin faz login na interface
         LoginPO loginPage = new LoginPO(realRepository);
         String usuarioLogado = loginPage.autenticar("admin_mestre", "admin123");
         assertEquals("admin_mestre", usuarioLogado);
 
-        // Passo 2 da Jornada: Admin acessa a tela de gerenciamento
+        // Admin acessa a tela de gerenciamento
         UserManagementPO managementPage = new UserManagementPO(realRepository, usuarioLogado);
 
-        // Passo 3 da Jornada: Admin deleta o usuário
+        // Admin deleta o usuário
         managementPage.deletarUsuario("jogador_toxico");
 
-        // Pós-condição da Jornada: O usuário indesejado sumiu da plataforma
+        // Pós-condição: O usuário indesejado sumiu da plataforma
         assertNull(realRepository.getUser("jogador_toxico"), "A jornada de exclusão falhou, usuário ainda existe.");
         assertNotNull(realRepository.getUser("admin_mestre"), "O admin deve continuar existindo.");
     }
 
-    // --- JORNADA 3: SEGURANÇA E BLOQUEIO DE LOGIN ERRADO ---
+    // SEGURANÇA E BLOQUEIO DE LOGIN ERRADO
     @Test
-    void jornadaDeTentativaDeInvasaoComSenhaIncorreta() {
+    void wrongPasswordJourney() {
         // Pré-condição: Usuário legítimo existe
         realRepository.createUser("lucas", hashPassword("senha_correta"), false);
 
         LoginPO loginPage = new LoginPO(realRepository);
 
-        // Passo da Jornada: Tentativa de login com senha errada
+        // Tentativa de login com senha errada
         String resultado = loginPage.autenticar("lucas", "senha_errada");
 
         // A interface deve bloquear e retornar nulo (não deixando ir para o jogo)

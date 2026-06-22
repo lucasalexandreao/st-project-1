@@ -76,7 +76,7 @@ class JdbcLeaderboardRepositoryTest {
         assertTrue(repository.getTopScores(10).isEmpty());
     }
 
-    // [TIPO: DOMÍNIO E FRONTEIRA] Valida o mapeamento de entidades (User) e permissões.
+    // [TIPO: INTEGRAÇÃO, DOMÍNIO E FRONTEIRA] Valida o mapeamento de entidades (User) e permissões.
     @Test
     void shouldCreateAndRetrieveUsersCorrectly() {
         repository.createUser("admin", "hash123", true);
@@ -94,7 +94,7 @@ class JdbcLeaderboardRepositoryTest {
         assertNull(repository.getUser("fantasma"));
     }
 
-    // [TIPO: DOMÍNIO] Teste de Regra de Negócio para o ranking de engajamento (sessões).
+    // [TIPO: INTEGRAÇÃO E DOMÍNIO] Teste de Regra de Negócio para o ranking de engajamento (sessões).
     @Test
     void shouldReturnTopUsersBySessions() {
         repository.createUser("AdminViciado", "hash", true);
@@ -114,7 +114,7 @@ class JdbcLeaderboardRepositoryTest {
         assertEquals(1, topUsers.get(1).getSessionCount());
     }
 
-    // [TIPO: DOMÍNIO] Teste de Regra de Negócio para o ranking de pontuação.
+    // [TIPO: INTEGRAÇÃO E DOMÍNIO] Teste de Regra de Negócio para o ranking de pontuação.
     @Test
     void shouldReturnTopUsersByScore() {
         repository.createUser("RapidoAdmin", "hash", true);
@@ -134,7 +134,7 @@ class JdbcLeaderboardRepositoryTest {
     // TESTES DE FRONTEIRA E ERROS DE INFRAESTRUTURA
     // ---------------------------------------------------------
 
-    // [TIPO: FRONTEIRA] Valida o construtor com String direta.
+    // [TIPO: INTEGRAÇÃO E FRONTEIRA] Valida o construtor com String direta.
     @Test
     void shouldInitializeWithRawJdbcUrl() {
         Path rawDbFile = tempDir.resolve("leaderboard-raw-test.db");

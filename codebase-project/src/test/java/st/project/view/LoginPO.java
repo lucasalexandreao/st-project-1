@@ -38,8 +38,6 @@ public class LoginPO extends GamePageObject {
 
             LoginDialog loginDialog = new LoginDialog(repo);
 
-            // CORREÇÃO: Criamos um Componente "Dummy" (Falso) para o SwingUtilities.getWindowAncestor
-            // processar em paz, evitando o NullPointerException.
             JFrame dummyParent = new JFrame();
             loginDialog.show(dummyParent);
 

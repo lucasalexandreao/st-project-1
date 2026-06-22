@@ -22,7 +22,7 @@ public class GameplaySystemTest {
     }
 
     @Test
-    void jornadaDoJogadorEntrandoNoLabirintoEControlandoOPersonagem() throws Exception {
+    void playerControlJourney() throws Exception {
         if (GraphicsEnvironment.isHeadless()) return;
 
         GameFlowManager flowManager = new GameFlowManager();

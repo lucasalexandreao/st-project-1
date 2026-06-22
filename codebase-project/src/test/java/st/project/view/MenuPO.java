@@ -36,7 +36,6 @@ public class MenuPO extends GamePageObject {
         JButton targetButton = null;
         JFrame targetFrame = null;
 
-        // Vasculha a memória do Java Swing em busca da janela que acabou de ser criada
         for (Frame f : Frame.getFrames()) {
             if ("Labirinto - Menu".equals(f.getTitle())) {
                 targetFrame = (JFrame) f;

@@ -35,7 +35,7 @@ public class RankingPO extends GamePageObject {
     private String extrairTextoDaAba(int tabIndex) {
         isReady();
 
-        // Intercepta a janela para não piscar na tela (modo Headless via Mockito)
+        // Intercepta a janela
         try (MockedConstruction<JDialog> dialogMock = mockConstruction(JDialog.class, (mock, context) -> {
             doNothing().when(mock).setVisible(anyBoolean());
         })) {

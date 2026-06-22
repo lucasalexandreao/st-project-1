@@ -28,7 +28,7 @@ public class GameplayPO extends GamePageObject {
 
     public void pressionarTecla(int keyCode) {
         isReady();
-        // Simula fisicamente o pressionamento da tecla direcionada ao GamePanel
+        // Simula o pressionamento da tecla direcionada ao GamePanel
         KeyEvent keyEvent = new KeyEvent(gamePanel, KeyEvent.KEY_PRESSED, System.currentTimeMillis(), 0, keyCode, KeyEvent.CHAR_UNDEFINED);
 
         // Dispara o evento de teclado em todos os ouvintes (KeyListeners) do painel

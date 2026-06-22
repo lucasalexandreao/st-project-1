@@ -21,7 +21,6 @@ public class JdbcLeaderboardRepositoryIntegrationTest {
         tempDbFile = File.createTempFile("integration_mcdc_test_", ".db");
         tempDbFile.deleteOnExit();
 
-        // Cobertura MC/DC: Avalia a decisão do construtor (rawUrl = false)
         repository = new JdbcLeaderboardRepository(tempDbFile.getAbsolutePath(), false);
     }
 
@@ -32,20 +31,15 @@ public class JdbcLeaderboardRepositoryIntegrationTest {
         }
     }
 
-    // --- COBERTURA MC/DC E ESTRUTURAL ---
-
     @Test
-    void testConstrutorDecisaoRawUrl() {
-        // Cobertura MC/DC: Avalia a decisão do construtor com rawUrl = true
+    void rawURLTest() {
+        // Avalia a decisão do construtor com rawUrl = true
         JdbcLeaderboardRepository rawRepo = new JdbcLeaderboardRepository("jdbc:sqlite:" + tempDbFile.getAbsolutePath(), true);
         assertDoesNotThrow(() -> rawRepo.getUser("admin"), "Deve conectar com a URL raw corretamente");
     }
 
     @Test
-    void testTratamentoDeNulosEBrancosNoNomeDoJogador_MCDC() {
-        // O método getUser/saveScore possui a decisão: (playerName == null)
-        // MC/DC Requer testar: 1) playerName = null, 2) playerName válido mas com espaços
-
+    void handlingNullAndBlankInPlayersName() {
         // Condição 1: Nulo (Avalia TRUE para playerName == null)
         assertNull(repository.getUser(null), "Pesquisar por nulo não deve falhar, deve retornar nulo");
 
@@ -55,10 +49,9 @@ public class JdbcLeaderboardRepositoryIntegrationTest {
         assertNotNull(user, "O repositório deve sanitizar espaços em branco usando trim() antes de persistir e buscar");
     }
 
-    // --- TESTES DE DOMÍNIO E INTEGRAÇÃO DE FLUXO ---
 
     @Test
-    void testCriacaoEBuscaDeUsuario() {
+    void UserCreationAndSearchTest() {
         repository.createUser("lucas", "senha123", true);
 
         User recuperado = repository.getUser("lucas");
@@ -68,17 +61,14 @@ public class JdbcLeaderboardRepositoryIntegrationTest {
         assertTrue(recuperado.isSuperuser(), "A flag de superusuário deve ser persistida");
     }
 
-    // --- TESTES DE FRONTEIRA E AGREGAÇÕES SQL (Slide 52/53) ---
-
     @Test
-    void testFronteirasDeLimitEOrdenacaoEmAgregacoes() throws Exception {
+    void boundaryAndOrderingInAggregations() throws Exception {
         repository.createUser("jogador_a", "h", false);
         repository.createUser("jogador_b", "h", false);
         repository.createUser("jogador_c", "h", false);
 
-        // PREPARAÇÃO DO CENÁRIO (Arrange)
         // Injetamos os valores diretamente na tabela 'players' via SQL puro
-        // para isolar o teste e avaliar estritamente a query de busca.
+        // para isolar o teste e avaliar a query de busca.
         try (java.sql.Connection conn = java.sql.DriverManager.getConnection("jdbc:sqlite:" + tempDbFile.getAbsolutePath());
              java.sql.PreparedStatement stmt = conn.prepareStatement("UPDATE players SET session_count = ? WHERE player_name = ?")) {
 
@@ -116,7 +106,7 @@ public class JdbcLeaderboardRepositoryIntegrationTest {
     }
 
     @Test
-    void testDelecaoDeUsuarioIntegrada() {
+    void UserDeleteTest() {
         repository.createUser("fantasma", "hash", false);
         assertNotNull(repository.getUser("fantasma"));
 

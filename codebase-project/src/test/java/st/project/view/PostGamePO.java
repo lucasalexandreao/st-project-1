@@ -25,11 +25,9 @@ public class PostGamePO extends GamePageObject {
     public PostGameDialog.PostGameAction interagirComTelaFinal(Component parent, boolean won, List<LeaderboardEntry> leaderboard, long time, int choiceIndex) {
         isReady();
 
-        // CORREÇÃO: Cria uma janela fantasma (dummy) caso o parent seja null,
-        // evitando o NullPointerException no SwingUtilities.getWindowAncestor.
         Component safeParent = (parent != null) ? parent : new JFrame();
 
-        // Intercepta a janela do JOptionPane para rodar em modo invisível (Headless)
+        // Intercepta a janela do JOptionPane para rodar em modo invisível
         // e simula o clique no botão correspondente ao choiceIndex
         try (MockedStatic<JOptionPane> optionPaneMock = mockStatic(JOptionPane.class)) {
 
